@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Vote Commission - Online Voting System</title>
+    <style>
+        :root {
+            --springbok-green: #006B3D;
+            --springbok-green-dark: #004d2b;
+            --springbok-green-light: #008f54;
+            --springbok-green-pale: #e6f2ed;
+            --springbok-gold: #FFB81C;
+            --springbok-gold-dark: #d4990a;
+            --springbok-gold-light: #ffd54f;
+            --springbok-gold-pale: #fff8e6;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --red-500: #ef4444;
+            --red-100: #fee2e2;
+            --red-700: #b91c1c;
+            --green-500: #22c55e;
+            --green-100: #dcfce7;
+            --blue-500: #3b82f6;
+            --blue-100: #dbeafe;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --transition: 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f5f6f8;
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== HEADER / NAVBAR ========== */
+        .navbar {
+            background: linear-gradient(135deg, var(--springbok-green) 0%, var(--springbok-green-dark) 100%);
+            color: var(--white);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: -0.3px;
+            text-decoration: none;
+            color: var(--white);
+        }
+        .navbar-logo {
+            width: 42px;
+            height: 42px;
+            background: var(--springbok-gold);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: var(--springbok-green-dark);
+            flex-shrink: 0;
+        }
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            list-style: none;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all var(--transition);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+        }
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--white);
+        }
+        .nav-link.nav-gold {
+            background: var(--springbok-gold);
+            color: var(--springbok-green-dark);
+            font-weight: 600;
+            padding: 0.5rem 1.2rem;
+        }
+        .nav-link.nav-gold:hover {
+            background: var(--springbok-gold-light);
+            color: var(--springbok-green-dark);
+        }
+        .nav-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+            padding-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--springbok-gold);
+            color: var(--springbok-green-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .badge-role {
+            font-size: 0.7rem;
+            background: var(--springbok-gold);
+            color: var(--springbok-green-dark);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+        .hamburger span {
+            width: 24px;
+            height: 2.5px;
+            background: var(--white);
+            border-radius: 2px;
+            transition: var(--transition);
+        }
+
+        /* ========== MAIN CONTAINER ========== */
+        .main-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* ========== CARDS ========== */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            transition: box-shadow var(--transition);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .card-header h2,
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.2px;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .card-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.3rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition);
+            text-decoration: none;
+            white-space: nowrap;
+            letter-spacing: 0.1px;
+        }
+        .btn-primary {
+            background: var(--springbok-green);
+            color: var(--white);
+        }
+        .btn-primary:hover {
+            background: var(--springbok-green-dark);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .btn-gold {
+            background: var(--springbok-gold);
+            color: var(--springbok-green-dark);
+            font-weight: 700;
+        }
+        .btn-gold:hover {
+            background: var(--springbok-gold-dark);
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--springbok-green);
+            color: var(--springbok-green);
+        }
+        .btn-outline:hover {
+            background: var(--springbok-green-pale);
+        }
+        .btn-outline-gold {
+            background: transparent;
+            border: 2px solid var(--springbok-gold);
+            color: var(--springbok-gold-dark);
+        }
+        .btn-outline-gold:hover {
+            background: var(--springbok-gold-pale);
+        }
+        .btn-danger {
+            background: var(--red-500);
+            color: var(--white);
+        }
+        .btn-danger:hover {
+            background: var(--red-700);
+        }
+        .btn-sm {
+            padding: 0.4rem 0.85rem;
+            font-size: 0.8rem;
+        }
+        .btn-lg {
+            padding: 0.85rem 2rem;
+            font-size: 1rem;
+            border-radius: var(--radius-lg);
+        }
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* ========== FORM ELEMENTS ========== */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            letter-spacing: -0.1px;
+        }
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            transition: all var(--transition);
+            background: var(--white);
+            color: var(--gray-800);
+            font-family: inherit;
+        }
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--springbok-green);
+            box-shadow: 0 0 0 3px rgba(0, 107, 61, 0.1);
+        }
+        .form-input.error {
+            border-color: var(--red-500);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+        }
+        .form-error-text {
+            color: var(--red-500);
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            font-weight: 500;
+        }
+        .form-hint {
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        /* ========== ALERTS ========== */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-left: 4px solid;
+        }
+        .alert-success {
+            background: var(--green-100);
+            color: #166534;
+            border-left-color: var(--springbok-green);
+        }
+        .alert-error {
+            background: var(--red-100);
+            color: #991b1b;
+            border-left-color: var(--red-500);
+        }
+        .alert-info {
+            background: var(--blue-100);
+            color: #1e40af;
+            border-left-color: var(--blue-500);
+        }
+        .alert-warning {
+            background: var(--springbok-gold-pale);
+            color: #7c5e00;
+            border-left-color: var(--springbok-gold);
+        }
+
+        /* ========== TABLES ========== */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        table th,
+        table td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        table th {
+            background: var(--gray-50);
+            font-weight: 700;
+            color: var(--gray-700);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+        table tbody tr {
+            transition: background var(--transition);
+        }
+        table tbody tr:hover {
+            background: var(--springbok-green-pale);
+        }
+        .table-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-closed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-upcoming {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+        .badge-verified {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-pending {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .badge-suspended {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ========== GRID LAYOUTS ========== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* ========== STAT CARDS ========== */
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .stat-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .stat-icon.green {
+            background: var(--springbok-green-pale);
+            color: var(--springbok-green);
+        }
+        .stat-icon.gold {
+            background: var(--springbok-gold-pale);
+            color: var(--springbok-gold-dark);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* ========== LOGIN PAGE ========== */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #f0f4f2 0%, #e8f0eb 30%, #fdf8ed 70%, #fef9f0 100%);
+            padding: 1.5rem;
+        }
+        .login-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 460px;
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+        .login-header {
+            background: linear-gradient(135deg, var(--springbok-green) 0%, var(--springbok-green-dark) 100%);
+            color: var(--white);
+            padding: 2rem 2rem 1.5rem;
+            text-align: center;
+        }
+        .login-header .logo-circle {
+            width: 64px;
+            height: 64px;
+            background: var(--springbok-gold);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--springbok-green-dark);
+            margin-bottom: 0.75rem;
+        }
+        .login-header h1 {
+            font-size: 1.4rem;
+            letter-spacing: -0.3px;
+            font-weight: 700;
+        }
+        .login-header p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+        .login-body {
+            padding: 2rem;
+        }
+        .login-footer {
+            text-align: center;
+            padding: 0 2rem 1.5rem;
+            font-size: 0.85rem;
+            color: var(--gray-500);
+        }
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--gray-400);
+            font-size: 0.8rem;
+        }
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        /* ========== VOTING BALLOT ========== */
+        .ballot-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-weight: 500;
+        }
+        .ballot-option:hover {
+            border-color: var(--springbok-gold);
+            background: var(--springbok-gold-pale);
+        }
+        .ballot-option.selected {
+            border-color: var(--springbok-green);
+            background: var(--springbok-green-pale);
+            box-shadow: 0 0 0 3px rgba(0, 107, 61, 0.08);
+        }
+        .ballot-radio {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--gray-400);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all var(--transition);
+        }
+        .ballot-option.selected .ballot-radio {
+            border-color: var(--springbok-green);
+            background: var(--springbok-green);
+        }
+        .ballot-option.selected .ballot-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--white);
+        }
+        .ballot-party-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            background: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 520px;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.25s ease;
+        }
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: var(--gray-400);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+        .modal-close:hover {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========== TOAST ========== */
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .toast {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
+            min-width: 280px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .toast-success {
+            background: var(--springbok-green);
+        }
+        .toast-error {
+            background: var(--red-500);
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(80px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ========== PAGE SECTION ========== */
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.5px;
+        }
+        .page-subtitle {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        /* ========== PROGRESS BAR ========== */
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--springbok-green), var(--springbok-green-light));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            .navbar {
+                padding: 0 1rem;
+            }
+            .navbar-nav {
+                display: none;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: var(--springbok-green-dark);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 0.5rem;
+                box-shadow: var(--shadow-lg);
+            }
+            .navbar-nav.open {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+            .nav-user-info {
+                border-left: none;
+                margin-left: 0;
+                padding-left: 0;
+                flex-wrap: wrap;
+            }
+            .main-container {
+                padding: 1rem;
+            }
+            .page-title {
+                font-size: 1.3rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .card-header {
+                padding: 1rem;
+            }
+            table th,
+            table td {
+                padding: 0.6rem 0.7rem;
+                font-size: 0.8rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .login-card {
+                max-width: 100%;
+            }
+            .login-header {
+                padding: 1.5rem 1.25rem;
+            }
+            .login-body {
+                padding: 1.25rem;
+            }
+            .btn-lg {
+                padding: 0.7rem 1.5rem;
+                font-size: 0.9rem;
+            }
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== NAVBAR ==================== -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="navbar-brand" onclick="navigateTo('dashboard')">
+            <div class="navbar-logo">EVC</div>
+            <span>E-Vote Commission</span>
+        </a>
+        <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="navbar-nav" id="navbarNav">
+            <li><a href="#" class="nav-link active" data-page="dashboard" onclick="navigateTo('dashboard')">📊 Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-page="elections" onclick="navigateTo('elections')">🗳️ Elections</a></li>
+            <li id="navVoters"><a href="#" class="nav-link" data-page="voters" onclick="navigateTo('voters')">👥 Voters</a></li>
+            <li id="navCandidates"><a href="#" class="nav-link" data-page="candidates" onclick="navigateTo('candidates')">🏛️ Candidates</a></li>
+            <li id="navAudit"><a href="#" class="nav-link" data-page="audit" onclick="navigateTo('audit')">📋 Audit Log</a></li>
+            <li id="navAdmin"><a href="#" class="nav-link" data-page="admin" onclick="navigateTo('admin')">⚙️ Admin</a></li>
+            <li><a href="#" class="nav-link nav-gold" onclick="handleLogout()">🚪 Logout</a></li>
+        </ul>
+        <div class="nav-user-info" id="navUserInfo">
+            <div class="nav-avatar" id="navAvatar">V</div>
+            <span id="navUsername">Voter</span>
+            <span class="badge-role" id="navRole">Voter</span>
+        </div>
+    </nav>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="main-container" id="mainContent">
+
+        <!-- ========== LOGIN PAGE ========== -->
+        <div class="page-section active" id="page-login">
+            <div class="login-page" style="background:transparent; padding:0; min-height:0;">
+                <div class="login-card" style="margin:2rem auto;">
+                    <div class="login-header">
+                        <div class="logo-circle">EVC</div>
+                        <h1>E-Vote Commission</h1>
+                        <p>Secure Online Voting System</p>
+                    </div>
+                    <div class="login-body">
+                        <div id="loginAlert" style="display:none;"></div>
+                        <form id="loginForm" onsubmit="handleLogin(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="loginId">South African ID Number</label>
+                                <input type="text" class="form-input" id="loginId" placeholder="e.g. 9001015009087" maxlength="13" required>
+                                <div class="form-hint">Enter your 13-digit SA ID number</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="loginPassword">Password</label>
+                                <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" required>
+                            </div>
+                            <button type="submit" class="btn btn-gold btn-lg" style="width:100%; justify-content:center;">
+                                🔐 Sign In
+                            </button>
+                        </form>
+                        <div class="login-divider">or</div>
+                        <button class="btn btn-outline" style="width:100%; justify-content:center;" onclick="demoQuickLogin('voter')">
+                            👤 Demo: Voter Login
+                        </button>
+                        <button class="btn btn-outline-gold" style="width:100%; justify-content:center; margin-top:0.5rem;" onclick="demoQuickLogin('admin')">
+                            ⚙️ Demo: Admin Login
+                        </button>
+                        <button class="btn btn-outline" style="width:100%; justify-content:center; margin-top:0.5rem;" onclick="demoQuickLogin('auditor')">
+                            📋 Demo: Auditor Login
+                        </button>
+                    </div>
+                    <div class="login-footer">
+                        🇿🇦 Official Electoral System &mdash; Secured &amp; Verified
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== DASHBOARD PAGE ========== -->
+        <div class="page-section" id="page-dashboard">
+            <div class="section-header">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Welcome back! Here's your voting overview.</p>
+            </div>
+            <div class="grid-4" id="dashboardStats"></div>
+            <div class="card" style="margin-top:1.5rem;">
+                <div class="card-header">
+                    <h3>📅 Active & Upcoming Elections</h3>
+                    <button class="btn btn-gold btn-sm" onclick="navigateTo('elections')">View All</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Election</th><th>Type</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="dashboardElectionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem;" id="quickVoteCard" style="display:none;">
+                <div class="card-header">
+                    <h3>⚡ Quick Vote</h3>
+                    <span class="badge-role badge-active">Active Now</span>
+                </div>
+                <div class="card-body">
+                    <p style="margin-bottom:1rem;">You have an active election ready for your vote.</p>
+                    <button class="btn btn-gold btn-lg" id="quickVoteBtn" onclick="openVoteModal()">🗳️ Cast Your Vote Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ELECTIONS PAGE ========== -->
+        <div class="page-section" id="page-elections">
+            <div class="section-header">
+                <h1 class="page-title">🗳️ Elections</h1>
+                <p class="page-subtitle">Browse active, upcoming, and closed elections.</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>All Elections</h3>
+                    <button class="btn btn-primary btn-sm" id="btnCreateElection" onclick="openCreateElectionModal()" style="display:none;">+ New Election</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Name</th><th>Type</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="electionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Results Section -->
+            <div class="card" style="margin-top:1.5rem;" id="resultsCard">
+                <div class="card-header">
+                    <h3>📊 Election Results</h3>
+                    <span class="badge-role badge-closed">Closed Elections Only</span>
+                </div>
+                <div class="card-body" id="resultsBody">
+                    <p style="color:var(--gray-500);">Select a closed election to view results.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== VOTERS PAGE ========== -->
+        <div class="page-section" id="page-voters">
+            <div class="section-header">
+                <h1 class="page-title">👥 Voter Management</h1>
+                <p class="page-subtitle">Registered voters and their qualification status.</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Registered Voters</h3>
+                    <button class="btn btn-primary btn-sm" onclick="openAddVoterModal()">+ Register Voter</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Voter ID</th><th>Full Name</th><th>Surname</th><th>Status</th><th>Qualified</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="votersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== CANDIDATES PAGE ========== -->
+        <div class="page-section" id="page-candidates">
+            <div class="section-header">
+                <h1 class="page-title">🏛️ Candidates & Parties</h1>
+                <p class="page-subtitle">Manage candidates and political parties for elections.</p>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><h3>Candidates</h3><button class="btn btn-primary btn-sm" onclick="openAddCandidateModal()">+ Add</button></div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead><tr><th>Name</th><th>Party</th><th>Election</th></tr></thead>
+                                <tbody id="candidatesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Political Parties</h3><button class="btn btn-primary btn-sm" onclick="openAddPartyModal()">+ Add</button></div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead><tr><th>ID</th><th>Party Name</th></tr></thead>
+                                <tbody id="partiesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== AUDIT LOG PAGE ========== -->
+        <div class="page-section" id="page-audit">
+            <div class="section-header">
+                <h1 class="page-title">📋 Audit & Activity Logs</h1>
+                <p class="page-subtitle">Immutable record of all system activities. Read-only access.</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Activity Log</h3>
+                    <span style="font-size:0.8rem; color:var(--gray-500);">🔒 Immutable Records</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Log ID</th><th>User/Voter ID</th><th>Action</th><th>Timestamp</th></tr>
+                            </thead>
+                            <tbody id="auditLogTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ADMIN PAGE ========== -->
+        <div class="page-section" id="page-admin">
+            <div class="section-header">
+                <h1 class="page-title">⚙️ System Administration</h1>
+                <p class="page-subtitle">Manage system users, roles, and security settings.</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>System Users</h3>
+                    <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>User ID</th><th>Username</th><th>Role</th><th>Last Login</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="systemUsersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem;">
+                <div class="card-header"><h3>System Roles</h3></div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>Role ID</th><th>Role Name</th></tr></thead>
+                            <tbody id="rolesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== VOTE MODAL ==================== -->
+    <div class="modal-overlay" id="voteModal" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <span>🗳️ Cast Your Vote</span>
+                <button class="modal-close" onclick="closeVoteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="voteModalAlert" style="display:none;"></div>
+                <p style="font-weight:600; margin-bottom:0.75rem;" id="voteElectionName"></p>
+                <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:1rem;">Your vote is completely anonymous and cannot be linked to your identity.</p>
+                <div id="ballotOptions"></div>
+                <button class="btn btn-gold btn-lg" style="width:100%; margin-top:1rem; justify-content:center;" id="submitVoteBtn" onclick="submitVote()" disabled>
+                    🔒 Submit Anonymous Vote
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CREATE ELECTION MODAL ==================== -->
+    <div class="modal-overlay" id="createElectionModal" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <span>📅 Create New Election</span>
+                <button class="modal-close" onclick="closeCreateElectionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createElectionForm" onsubmit="createElection(event)">
+                    <div class="form-group"><label class="form-label">Election Name</label><input class="form-input" id="electionName" required></div>
+                    <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="electionType"><option>National</option><option>Local</option><option>Provincial</option></select></div>
+                    <div class="grid-2">
+                        <div class="form-group"><label class="form-label">Start Date</label><input type="datetime-local" class="form-input" id="electionStart" required></div>
+                        <div class="form-group"><label class="form-label">End Date</label><input type="datetime-local" class="form-input" id="electionEnd" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-gold" style="width:100%; justify-content:center;">Create Election</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPTS ==================== -->
+    <script>
+        // ============ APPLICATION STATE ============
+        const APP = {
+            currentUser: null,
+            currentPage: 'login',
+            selectedCandidate: null,
+            currentVoteElectionId: null,
+        };
+
+        // ============ MOCK DATABASE ============
+        const DB = {
+            voters: [
+                { voter_id: '9001015009087', full_name: 'Thabo', surname: 'Molefe', password_hash: 'pass123',
+                    voter_status: 'active', qualification_status: true },
+                { voter_id: '8505206018082', full_name: 'Lerato', surname: 'Dlamini', password_hash: 'pass123',
+                    voter_status: 'active', qualification_status: true },
+                { voter_id: '9203156023095', full_name: 'Sipho', surname: 'Nkosi', password_hash: 'pass123',
+                    voter_status: 'suspended', qualification_status: false },
+                { voter_id: '7808305034083', full_name: 'Precious', surname: 'Mahlangu', password_hash: 'pass123',
+                    voter_status: 'active', qualification_status: true },
+                { voter_id: '9604125041080', full_name: 'Kagiso', surname: 'Modise', password_hash: 'pass123',
+                    voter_status: 'active', qualification_status: true },
+            ],
+            elections: [
+                { election_id: 1, election_name: 'National General Election 2026', election_type: 'National',
+                    start_date: '2026-05-01T08:00', end_date: '2026-06-15T20:00', status: 'Active',
+                    result_locked: false },
+                { election_id: 2, election_name: 'Gauteng Provincial Election', election_type: 'Provincial',
+                    start_date: '2026-07-01T08:00', end_date: '2026-07-20T20:00', status: 'Upcoming',
+                    result_locked: false },
+                { election_id: 3, election_name: 'Cape Town Municipal Election', election_type: 'Local',
+                    start_date: '2025-11-01T08:00', end_date: '2025-11-15T20:00', status: 'Closed',
+                    result_locked: true },
+            ],
+            parties: [
+                { party_id: 1, party_name: 'African National Congress' },
+                { party_id: 2, party_name: 'Democratic Alliance' },
+                { party_id: 3, party_name: 'Economic Freedom Fighters' },
+                { party_id: 4, party_name: 'Inkatha Freedom Party' },
+                { party_id: 5, party_name: 'Freedom Front Plus' },
+            ],
+            candidates: [
+                { candidate_id: 1, candidate_name: 'Cyril Ramaphosa', party_id: 1, election_id: 1 },
+                { candidate_id: 2, candidate_name: 'John Steenhuisen', party_id: 2, election_id: 1 },
+                { candidate_id: 3, candidate_name: 'Julius Malema', party_id: 3, election_id: 1 },
+                { candidate_id: 4, candidate_name: 'Velenkosini Hlabisa', party_id: 4, election_id: 1 },
+                { candidate_id: 5, candidate_name: 'Pieter Groenewald', party_id: 5, election_id: 1 },
+                { candidate_id: 6, candidate_name: 'Panyaza Lesufi', party_id: 1, election_id: 2 },
+                { candidate_id: 7, candidate_name: 'Solly Msimanga', party_id: 2, election_id: 2 },
+            ],
+            participations: [
+                { participation_id: 1, voter_id: '8505206018082', election_id: 1, participation_time: '2026-05-02T10:30:00' },
+            ],
+            anonymous_votes: [
+                { vote_receipt_id: 1, candidate_id: 2, election_id: 1, vote_timestamp: '2026-05-02T10:30:05' },
+            ],
+            system_users: [
+                { user_id: 1, username: 'admin', password_hash: 'admin123', role_id: 1,
+                log_time: '2026-05-10T08:00:00' },
+                { user_id: 2, username: 'election_admin', password_hash: 'admin123', role_id: 2,
+                    log_time: '2026-05-10T08:30:00' },
+                { user_id: 3, username: 'auditor1', password_hash: 'audit123', role_id: 4,
+                log_time: '2026-05-10T09:00:00' },
+                { user_id: 4, username: 'itsupport', password_hash: 'it123', role_id: 3,
+                log_time: '2026-05-10T07:00:00' },
+            ],
+            roles: [
+                { role_id: 1, role_name: 'System Administrator' },
+                { role_id: 2, role_name: 'Election Administrator' },
+                { role_id: 3, role_name: 'IT Support Team' },
+                { role_id: 4, role_name: 'Auditor' },
+            ],
+            audit_logs: [
+                { log_id: 1, user_id: 1, voter_id: null, action: 'System Administrator logged in',
+                    log_time: '2026-05-10T08:00:00' },
+                { log_id: 2, user_id: null, voter_id: '9001015009087', action: 'Voter registered successfully',
+                    log_time: '2026-05-09T14:20:00' },
+                { log_id: 3, user_id: null, voter_id: '8505206018082', action: 'Vote cast in Election #1',
+                    log_time: '2026-05-02T10:30:05' },
+                { log_id: 4, user_id: 2, voter_id: null, action: 'Election Administrator created Election #2',
+                    log_time: '2026-05-08T11:00:00' },
+                { log_id: 5, user_id: 3, voter_id: null, action: 'Auditor reviewed activity logs',
+                    log_time: '2026-05-10T09:15:00' },
+            ],
+        };
+
+        // Deep clone for reset
+        const DB_INITIAL = JSON.parse(JSON.stringify(DB));
+
+        // ============ UTILITY FUNCTIONS ============
+        function getPartyName(partyId) {
+            const party = DB.parties.find(p => p.party_id === partyId);
+            return party ? party.party_name : 'Independent';
+        }
+
+        function getPartyInitials(partyName) {
+            if (!partyName || partyName === 'Independent') return 'IND';
+            return partyName.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
+        }
+
+        function getRoleName(roleId) {
+            const role = DB.roles.find(r => r.role_id === roleId);
+            return role ? role.role_name : 'Unknown';
+        }
+
+        function getElectionName(electionId) {
+            const el = DB.elections.find(e => e.election_id === electionId);
+            return el ? el.election_name : 'Unknown Election';
+        }
+
+        function formatDateTime(dtStr) {
+            if (!dtStr) return 'N/A';
+            const d = new Date(dtStr);
+            return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d
+                .toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function generateId() {
+            return Math.floor(Math.random() * 90000) + 1000;
+        }
+
+        function nowISO() {
+            return new Date().toISOString().replace('T', ' ').substring(0, 19);
+        }
+
+        function isElectionActive(election) {
+            const now = new Date();
+            const start = new Date(election.start_date);
+            const end = new Date(election.end_date);
+            return now >= start && now <= end && election.status === 'Active' && !election.result_locked;
+        }
+
+        function hasVoted(voterId, electionId) {
+            return DB.participations.some(p => p.voter_id === voterId && p.election_id === electionId);
+        }
+
+        // ============ TOAST NOTIFICATIONS ============
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(80px)';
+                toast.style.transition = '0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ============ NAVIGATION ============
+        function navigateTo(page) {
+            APP.currentPage = page;
+            // Hide all pages
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            // Show target page
+            const targetPage = document.getElementById('page-' + page);
+            if (targetPage) targetPage.classList.add('active');
+            // Update nav links
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-page') === page) link.classList.add('active');
+            });
+            // Update visibility based on role
+            updateUIBasedOnRole();
+            // Render page content
+            renderPageContent(page);
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateUIBasedOnRole() {
+            const user = APP.currentUser;
+            const isVoter = user && user.type === 'voter';
+            const isSysUser = user && user.type === 'system_user';
+            const roleName = user ? user.roleName : '';
+
+            // Show/hide nav items
+            const navVoters = document.getElementById('navVoters');
+            const navCandidates = document.getElementById('navCandidates');
+            const navAudit = document.getElementById('navAudit');
+            const navAdmin = document.getElementById('navAdmin');
+            const btnCreateElection = document.getElementById('btnCreateElection');
+            const quickVoteCard = document.getElementById('quickVoteCard');
+
+            if (isVoter) {
+                if (navVoters) navVoters.style.display = 'none';
+                if (navCandidates) navCandidates.style.display = 'none';
+                if (navAudit) navAudit.style.display = 'none';
+                if (navAdmin) navAdmin.style.display = 'none';
+                if (btnCreateElection) btnCreateElection.style.display = 'none';
+                if (quickVoteCard) quickVoteCard.style.display = 'block';
+            } else if (isSysUser) {
+                if (navVoters) navVoters.style.display = 'block';
+                if (navCandidates) navCandidates.style.display = 'block';
+                if (navAudit) navAudit.style.display = (roleName === 'Auditor' || roleName ===
+                    'System Administrator') ? 'block' : 'none';
+                if (navAdmin) navAdmin.style.display = (roleName === 'System Administrator') ? 'block' : 'none';
+                if (btnCreateElection) btnCreateElection.style.display = (roleName === 'Election Administrator' ||
+                    roleName === 'System Administrator') ? 'inline-flex' : 'none';
+                if (quickVoteCard) quickVoteCard.style.display = 'none';
+            }
+
+            // Update nav user info
+            if (user) {
+                document.getElementById('navUsername').textContent = user.displayName;
+                document.getElementById('navRole').textContent = user.roleName || 'User';
+                document.getElementById('navAvatar').textContent = (user.displayName || 'U')[0].toUpperCase();
+            }
+
+            // If on a page the user shouldn't see, redirect
+            if (isVoter && ['voters', 'candidates', 'audit', 'admin'].includes(APP.currentPage)) {
+                navigateTo('dashboard');
+            }
+        }
+
+        function renderPageContent(page) {
+            switch (page) {
+                case 'dashboard':
+                    renderDashboard();
+                    break;
+                case 'elections':
+                    renderElections();
+                    break;
+                case 'voters':
+                    renderVoters();
+                    break;
+                case 'candidates':
+                    renderCandidates();
+                    break;
+                case 'audit':
+                    renderAuditLog();
+                    break;
+                case 'admin':
+                    renderAdmin();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // ============ LOGIN ============
+        function handleLogin(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const alertDiv = document.getElementById('loginAlert');
+
+            // Check voters
+            const voter = DB.voters.find(v => v.voter_id === idInput && v.password_hash === password);
+            if (voter) {
+                if (voter.voter_status === 'suspended') {
+                    showAlert(alertDiv, 'Your account has been suspended. Please contact support.', 'error');
+                    return;
+                }
+                APP.currentUser = {
+                    type: 'voter',
+                    id: voter.voter_id,
+                    displayName: voter.full_name + ' ' + voter.surname,
+                    roleName: 'Voter',
+                    data: voter,
+                };
+                addAuditLog(null, voter.voter_id, 'Voter logged in');
+                showToast('Welcome, ' + voter.full_name + '! 🇿🇦', 'success');
+                navigateTo('dashboard');
+                return;
+            }
+
+            // Check system users
+            const sysUser = DB.system_users.find(u => u.username === idInput && u.password_hash === password);
+            if (sysUser) {
+                const roleName = getRoleName(sysUser.role_id);
+                APP.currentUser = {
+                    type: 'system_user',
+                    id: sysUser.user_id,
+                    displayName: sysUser.username,
+                    roleName: roleName,
+                    data: sysUser,
+                };
+                addAuditLog(sysUser.user_id, null, roleName + ' logged in');
+                showToast('Welcome, ' + roleName + '! ⚙️', 'success');
+                navigateTo('dashboard');
+                return;
+            }
+
+            showAlert(alertDiv, 'Invalid ID or password. Please try again.', 'error');
+        }
+
+        function demoQuickLogin(type) {
+            if (type === 'voter') {
+                document.getElementById('loginId').value = '9001015009087';
+                document.getElementById('loginPassword').value = 'pass123';
+                handleLogin(new Event('submit'));
+            } else if (type === 'admin') {
+                document.getElementById('loginId').value = 'admin';
+                document.getElementById('loginPassword').value = 'admin123';
+                handleLogin(new Event('submit'));
+            } else if (type === 'auditor') {
+                document.getElementById('loginId').value = 'auditor1';
+                document.getElementById('loginPassword').value = 'audit123';
+                handleLogin(new Event('submit'));
+            }
+        }
+
+        function handleLogout() {
+            if (APP.currentUser) {
+                const user = APP.currentUser;
+                if (user.type === 'voter') {
+                    addAuditLog(null, user.id, 'Voter logged out');
+                } else {
+                    addAuditLog(user.id, null, getRoleName(user.data.role_id) + ' logged out');
+                }
+            }
+            APP.currentUser = null;
+            APP.selectedCandidate = null;
+            APP.currentVoteElectionId = null;
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginAlert').style.display = 'none';
+            navigateTo('login');
+            showToast('Logged out successfully.', 'success');
+        }
+
+        function showAlert(container, message, type) {
+            container.style.display = 'block';
+            container.className = 'alert alert-' + type;
+            container.textContent = message;
+            setTimeout(() => { container.style.display = 'none'; }, 4000);
+        }
+
+        function addAuditLog(userId, voterId, action) {
+            DB.audit_logs.push({
+                log_id: DB.audit_logs.length + 1,
+                user_id: userId || null,
+                voter_id: voterId || null,
+                action: action,
+                log_time: nowISO(),
+            });
+        }
+
+        // ============ DASHBOARD ============
+        function renderDashboard() {
+            const user = APP.currentUser;
+            if (!user) return;
+
+            const statsDiv = document.getElementById('dashboardStats');
+            const electionsTableBody = document.getElementById('dashboardElectionsTable');
+            const quickVoteCard = document.getElementById('quickVoteCard');
+            const quickVoteBtn = document.getElementById('quickVoteBtn');
+
+            let statsHTML = '';
+            if (user.type === 'voter') {
+                const totalElections = DB.elections.length;
+                const votedCount = DB.participations.filter(p => p.voter_id === user.id).length;
+                const activeElections = DB.elections.filter(e => isElectionActive(e) && !hasVoted(user.id, e
+                    .election_id)).length;
+                statsHTML = `
+                    <div class="stat-card"><div class="stat-icon green">🗳️</div><div><div class="stat-value">${totalElections}</div><div class="stat-label">Total Elections</div></div></div>
+                    <div class="stat-card"><div class="stat-icon gold">✅</div><div><div class="stat-value">${votedCount}</div><div class="stat-label">Votes Cast</div></div></div>
+                    <div class="stat-card"><div class="stat-icon green">⚡</div><div><div class="stat-value">${activeElections}</div><div class="stat-label">Active Elections</div></div></div>
+                    <div class="stat-card"><div class="stat-icon gold">🔒</div><div><div class="stat-value">${user.data.qualification_status ? 'Verified' : 'Pending'}</div><div class="stat-label">Status</div></div></div>
+                `;
+                // Quick vote card
+                const activeEl = DB.elections.find(e => isElectionActive(e) && !hasVoted(user.id, e.election_id));
+                if (activeEl && quickVoteCard) {
+                    quickVoteCard.style.display = 'block';
+                    quickVoteBtn.onclick = () => openVoteModal(activeEl.election_id);
+                } else if (quickVoteCard) {
+                    quickVoteCard.style.display = 'none';
+                }
+            } else {
+                const totalVoters = DB.voters.length;
+                const totalElections = DB.elections.length;
+                const totalVotes = DB.anonymous_votes.length;
+                const activeElections = DB.elections.filter(e => isElectionActive(e)).length;
+                statsHTML = `
+                    <div class="stat-card"><div class="stat-icon green">👥</div><div><div class="stat-value">${totalVoters}</div><div class="stat-label">Registered Voters</div></div></div>
+                    <div class="stat-card"><div class="stat-icon gold">📅</div><div><div class="stat-value">${totalElections}</div><div class="stat-label">Total Elections</div></div></div>
+                    <div class="stat-card"><div class="stat-icon green">🗳️</div><div><div class="stat-value">${totalVotes}</div><div class="stat-label">Votes Cast</div></div></div>
+                    <div class="stat-card"><div class="stat-icon gold">⚡</div><div><div class="stat-value">${activeElections}</div><div class="stat-label">Active Now</div></div></div>
+                `;
+                if (quickVoteCard) quickVoteCard.style.display = 'none';
+            }
+            statsDiv.innerHTML = statsHTML;
+
+            // Elections table
+            let rows = '';
+            DB.elections.slice(0, 5).forEach(el => {
+                const statusClass = el.status === 'Active' ? 'badge-active' : el.status === 'Closed' ?
+                    'badge-closed' : 'badge-upcoming';
+                const canVote = user.type === 'voter' && isElectionActive(el) && !hasVoted(user.id, el
+                    .election_id);
+                const actionBtn = canVote ?
+                    `<button class="btn btn-gold btn-sm" onclick="openVoteModal(${el.election_id})">Vote</button>` :
+                    el.status === 'Closed' ?
+                    `<button class="btn btn-outline btn-sm" onclick="viewResults(${el.election_id})">Results</button>` :
+                    `<span style="color:var(--gray-400);font-size:0.8rem;">—</span>`;
+                rows += `<tr>
+                    <td><strong>${el.election_name}</strong></td>
+                    <td>${el.election_type}</td>
+                    <td>${formatDateTime(el.start_date)}</td>
+                    <td>${formatDateTime(el.end_date)}</td>
+                    <td><span class="table-badge ${statusClass}">${el.status}</span></td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            });
+            electionsTableBody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);">No elections found.</td></tr>';
+        }
+
+        // ============ ELECTIONS PAGE ============
+        function renderElections() {
+            const tableBody = document.getElementById('electionsTable');
+            const user = APP.currentUser;
+            let rows = '';
+            DB.elections.forEach(el => {
+                const statusClass = el.status === 'Active' ? 'badge-active' : el.status === 'Closed' ?
+                    'badge-closed' : 'badge-upcoming';
+                const canVote = user && user.type === 'voter' && isElectionActive(el) && !hasVoted(user.id, el
+                    .election_id);
+                const canViewResults = el.status === 'Closed' && el.result_locked;
+                let actionBtn = '';
+                if (canVote) {
+                    actionBtn =
+                        `<button class="btn btn-gold btn-sm" onclick="openVoteModal(${el.election_id})">🗳️ Vote</button>`;
+                } else if (canViewResults) {
+                    actionBtn =
+                        `<button class="btn btn-outline btn-sm" onclick="viewResults(${el.election_id})">📊 Results</button>`;
+                } else if (hasVoted(user?.id, el.election_id)) {
+                    actionBtn =
+                        '<span class="table-badge badge-verified" style="font-size:0.7rem;">✅ Voted</span>';
+                } else {
+                    actionBtn =
+                    '<span style="color:var(--gray-400);font-size:0.8rem;">—</span>';
+                }
+                rows += `<tr>
+                    <td>#${el.election_id}</td>
+                    <td><strong>${el.election_name}</strong></td>
+                    <td>${el.election_type}</td>
+                    <td>${formatDateTime(el.start_date)}</td>
+                    <td>${formatDateTime(el.end_date)}</td>
+                    <td><span class="table-badge ${statusClass}">${el.status}</span></td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            });
+            tableBody.innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);">No elections found.</td></tr>';
+        }
+
+        function viewResults(electionId) {
+            const el = DB.elections.find(e => e.election_id === electionId);
+            if (!el || el.status !== 'Closed') {
+                showToast('Results are only available for closed elections.', 'error');
+                return;
+            }
+            const votes = DB.anonymous_votes.filter(v => v.election_id === electionId);
+            const candidates = DB.candidates.filter(c => c.election_id === electionId);
+            const resultsBody = document.getElementById('resultsBody');
+            if (candidates.length === 0) {
+                resultsBody.innerHTML = '<p style="color:var(--gray-500);">No candidates for this election.</p>';
+                return;
+            }
+            let html = `<h4 style="margin-bottom:1rem;">📊 Results: ${el.election_name}</h4>`;
+            html += '<div style="display:flex;flex-direction:column;gap:0.75rem;">';
+            const totalVotes = votes.length;
+            candidates.forEach(c => {
+                const count = votes.filter(v => v.candidate_id === c.candidate_id).length;
+                const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                const partyName = getPartyName(c.party_id);
+                html += `
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-weight:500;margin-bottom:4px;">
+                            <span>${c.candidate_name} <small style="color:var(--gray-500);">(${partyName})</small></span>
+                            <span><strong>${count}</strong> votes (${pct}%)</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+                    </div>`;
+            });
+            html += `<p style="margin-top:0.75rem;font-size:0.85rem;color:var(--gray-500);">Total votes cast: <strong>${totalVotes}</strong></p>`;
+            html += '</div>';
+            resultsBody.innerHTML = html;
+            navigateTo('elections');
+            document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ============ VOTING ============
+        function openVoteModal(electionId) {
+            const user = APP.currentUser;
+            if (!user || user.type !== 'voter') {
+                showToast('Only registered voters can cast votes.', 'error');
+                return;
+            }
+            if (hasVoted(user.id, electionId)) {
+                showToast('You have already voted in this election.', 'error');
+                return;
+            }
+            const el = DB.elections.find(e => e.election_id === electionId);
+            if (!el || !isElectionActive(el)) {
+                showToast('This election is not currently active.', 'error');
+                return;
+            }
+            APP.currentVoteElectionId = electionId;
+            APP.selectedCandidate = null;
+            document.getElementById('voteElectionName').textContent = 'Election: ' + el.election_name;
+            document.getElementById('voteModalAlert').style.display = 'none';
+            document.getElementById('submitVoteBtn').disabled = true;
+
+            const candidates = DB.candidates.filter(c => c.election_id === electionId);
+            const ballotDiv = document.getElementById('ballotOptions');
+            if (candidates.length === 0) {
+                ballotDiv.innerHTML =
+                    '<p style="color:var(--gray-500);">No candidates registered for this election.</p>';
+            } else {
+                ballotDiv.innerHTML = candidates.map(c => {
+                    const partyName = getPartyName(c.party_id);
+                    const initials = getPartyInitials(partyName);
+                    return `
+                        <div class="ballot-option" data-candidate-id="${c.candidate_id}" onclick="selectCandidate(${c.candidate_id}, this)">
+                            <div class="ballot-radio"></div>
+                            <div class="ballot-party-logo" style="background:var(--springbok-gold-pale);color:var(--springbok-green-dark);font-weight:700;">${initials}</div>
+                            <div>
+                                <strong>${c.candidate_name}</strong>
+                                <div style="font-size:0.8rem;color:var(--gray-500);">${partyName}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+            document.getElementById('voteModal').style.display = 'flex';
+            addAuditLog(null, user.id, 'Opened voting ballot for Election #' + electionId);
+        }
+
+        function selectCandidate(candidateId, element) {
+            document.querySelectorAll('.ballot-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            APP.selectedCandidate = candidateId;
+            document.getElementById('submitVoteBtn').disabled = false;
+            document.getElementById('voteModalAlert').style.display = 'none';
+        }
+
+        function submitVote() {
+            if (!APP.selectedCandidate || !APP.currentVoteElectionId) return;
+            const user = APP.currentUser;
+            const electionId = APP.currentVoteElectionId;
+            const candidateId = APP.selectedCandidate;
+
+            // Dual insert: participation + anonymous vote
+            const participationId = DB.participations.length + 1;
+            DB.participations.push({
+                participation_id: participationId,
+                voter_id: user.id,
+                election_id: electionId,
+                participation_time: nowISO(),
+            });
+            DB.anonymous_votes.push({
+                vote_receipt_id: DB.anonymous_votes.length + 1,
+                candidate_id: candidateId,
+                election_id: electionId,
+                vote_timestamp: nowISO(),
+            });
+            addAuditLog(null, user.id, 'Vote cast anonymously in Election #' + electionId);
+
+            document.getElementById('voteModalAlert').style.display = 'block';
+            document.getElementById('voteModalAlert').className = 'alert alert-success';
+            document.getElementById('voteModalAlert').textContent =
+                '✅ Your vote has been recorded securely and anonymously. Thank you for participating!';
+            document.getElementById('submitVoteBtn').disabled = true;
+            document.querySelectorAll('.ballot-option').forEach(opt => opt.style.pointerEvents = 'none');
+
+            showToast('Vote cast successfully! 🇿🇦', 'success');
+            setTimeout(() => {
+                closeVoteModal();
+                renderDashboard();
+                renderElections();
+            }, 2000);
+        }
+
+        function closeVoteModal() {
+            document.getElementById('voteModal').style.display = 'none';
+            APP.selectedCandidate = null;
+            APP.currentVoteElectionId = null;
+            document.getElementById('ballotOptions').innerHTML = '';
+            document.getElementById('submitVoteBtn').disabled = true;
+        }
+
+        // ============ VOTERS PAGE ============
+        function renderVoters() {
+            const tableBody = document.getElementById('votersTable');
+            let rows = '';
+            DB.voters.forEach(v => {
+                const statusClass = v.voter_status === 'active' ? 'badge-active' : v.voter_status ===
+                    'suspended' ? 'badge-suspended' : 'badge-pending';
+                const qualClass = v.qualification_status ? 'badge-verified' : 'badge-pending';
+                rows += `<tr>
+                    <td><code>${v.voter_id}</code></td>
+                    <td>${v.full_name}</td>
+                    <td>${v.surname}</td>
+                    <td><span class="table-badge ${statusClass}">${v.voter_status}</span></td>
+                    <td><span class="table-badge ${qualClass}">${v.qualification_status ? 'Verified' : 'Pending'}</span></td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="toggleVoterStatus('${v.voter_id}')">Toggle Status</button>
+                    </td>
+                </tr>`;
+            });
+            tableBody.innerHTML = rows;
+        }
+
+        function toggleVoterStatus(voterId) {
+            const voter = DB.voters.find(v => v.voter_id === voterId);
+            if (!voter) return;
+            const oldStatus = voter.voter_status;
+            voter.voter_status = oldStatus === 'active' ? 'suspended' : 'active';
+            addAuditLog(APP.currentUser?.id, null,
+                `Changed voter ${voterId} status from '${oldStatus}' to '${voter.voter_status}'`);
+            showToast(`Voter ${voterId} status updated.`, 'success');
+            renderVoters();
+        }
+
+        function openAddVoterModal() {
+            const newId = prompt('Enter 13-digit SA ID number:');
+            if (!newId || newId.length !== 13) { showToast('ID must be exactly 13 digits.', 'error'); return; }
+            if (DB.voters.find(v => v.voter_id === newId)) { showToast('Voter already exists.', 'error'); return; }
+            const fullName = prompt('Full name:');
+            const surname = prompt('Surname:');
+            if (!fullName || !surname) return;
+            DB.voters.push({
+                voter_id: newId,
+                full_name: fullName,
+                surname: surname,
+                password_hash: 'pass123',
+                voter_status: 'active',
+                qualification_status: true,
+            });
+            addAuditLog(APP.currentUser?.id, null, 'Registered new voter: ' + newId);
+            showToast('Voter registered successfully!', 'success');
+            renderVoters();
+        }
+
+        // ============ CANDIDATES PAGE ============
+        function renderCandidates() {
+            const candTable = document.getElementById('candidatesTable');
+            const partyTable = document.getElementById('partiesTable');
+            let candRows = '';
+            DB.candidates.forEach(c => {
+                candRows += `<tr>
+                    <td>${c.candidate_name}</td>
+                    <td>${getPartyName(c.party_id)}</td>
+                    <td>${getElectionName(c.election_id)}</td>
+                </tr>`;
+            });
+            candTable.innerHTML = candRows || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);">No candidates.</td></tr>';
+
+            let partyRows = '';
+            DB.parties.forEach(p => {
+                partyRows +=
+                    `<tr><td>#${p.party_id}</td><td><strong>${p.party_name}</strong></td></tr>`;
+            });
+            partyTable.innerHTML = partyRows;
+        }
+
+        function openAddCandidateModal() {
+            const name = prompt('Candidate name:');
+            if (!name) return;
+            const partyId = parseInt(prompt('Party ID (1-5):'));
+            const electionId = parseInt(prompt('Election ID:'));
+            if (!partyId || !electionId) return;
+            DB.candidates.push({
+                candidate_id: DB.candidates.length + 1,
+                candidate_name: name,
+                party_id: partyId,
+                election_id: electionId,
+            });
+            addAuditLog(APP.currentUser?.id, null, 'Added candidate: ' + name);
+            showToast('Candidate added!', 'success');
+            renderCandidates();
+        }
+
+        function openAddPartyModal() {
+            const name = prompt('Party name:');
+            if (!name) return;
+            DB.parties.push({ party_id: DB.parties.length + 1, party_name: name });
+            addAuditLog(APP.currentUser?.id, null, 'Added party: ' + name);
+            showToast('Party added!', 'success');
+            renderCandidates();
+        }
+
+        // ============ AUDIT LOG ============
+        function renderAuditLog() {
+            const tableBody = document.getElementById('auditLogTable');
+            let rows = '';
+            [...DB.audit_logs].reverse().forEach(log => {
+                const actorId = log.user_id ? 'User #' + log.user_id : (log.voter_id ? 'Voter ' + log.voter_id :
+                    'System');
+                rows += `<tr>
+                    <td>#${log.log_id}</td>
+                    <td><code>${actorId}</code></td>
+                    <td>${log.action}</td>
+                    <td>${formatDateTime(log.log_time)}</td>
+                </tr>`;
+            });
+            tableBody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:var(--gray-400);">No log entries.</td></tr>';
+        }
+
+        // ============ ADMIN PAGE ============
+        function renderAdmin() {
+            const usersTable = document.getElementById('systemUsersTable');
+            const rolesTable = document.getElementById('rolesTable');
+            let userRows = '';
+            DB.system_users.forEach(u => {
+                userRows += `<tr>
+                    <td>#${u.user_id}</td>
+                    <td><strong>${u.username}</strong></td>
+                    <td>${getRoleName(u.role_id)}</td>
+                    <td>${formatDateTime(u.log_time)}</td>
+                    <td><button class="btn btn-outline btn-sm" onclick="resetUserPassword(${u.user_id})">Reset PW</button></td>
+                </tr>`;
+            });
+            usersTable.innerHTML = userRows;
+
+            let roleRows = '';
+            DB.roles.forEach(r => {
+                roleRows +=
+                    `<tr><td>#${r.role_id}</td><td><strong>${r.role_name}</strong></td></tr>`;
+            });
+            rolesTable.innerHTML = roleRows;
+        }
+
+        function resetUserPassword(userId) {
+            const user = DB.system_users.find(u => u.user_id === userId);
+            if (!user) return;
+            user.password_hash = 'reset123';
+            addAuditLog(APP.currentUser?.id, null, 'Reset password for user #' + userId);
+            showToast('Password reset to "reset123" for user #' + userId, 'success');
+            renderAdmin();
+        }
+
+        function openAddUserModal() {
+            const username = prompt('Username:');
+            if (!username) return;
+            const roleId = parseInt(prompt('Role ID (1=System Admin, 2=Election Admin, 3=IT Support, 4=Auditor):'));
+            if (!roleId || roleId < 1 || roleId > 4) return;
+            DB.system_users.push({
+                user_id: DB.system_users.length + 1,
+                username: username,
+                password_hash: 'newuser123',
+                role_id: roleId,
+                log_time: nowISO(),
+            });
+            addAuditLog(APP.currentUser?.id, null, 'Created new system user: ' + username);
+            showToast('User created!', 'success');
+            renderAdmin();
+        }
+
+        // ============ CREATE ELECTION ============
+        function openCreateElectionModal() {
+            document.getElementById('createElectionModal').style.display = 'flex';
+        }
+
+        function closeCreateElectionModal() {
+            document.getElementById('createElectionModal').style.display = 'none';
+        }
+
+        function createElection(e) {
+            e.preventDefault();
+            const name = document.getElementById('electionName').value.trim();
+            const type = document.getElementById('electionType').value;
+            const start = document.getElementById('electionStart').value;
+            const end = document.getElementById('electionEnd').value;
+            if (!name || !start || !end) return;
+            if (new Date(end) <= new Date(start)) {
+                showToast('End date must be after start date.', 'error');
+                return;
+            }
+            DB.elections.push({
+                election_id: DB.elections.length + 1,
+                election_name: name,
+                election_type: type,
+                start_date: start,
+                end_date: end,
+                status: 'Upcoming',
+                result_locked: false,
+            });
+            addAuditLog(APP.currentUser?.id, null, 'Created new election: ' + name);
+            showToast('Election created successfully! 📅', 'success');
+            closeCreateElectionModal();
+            document.getElementById('createElectionForm').reset();
+            renderElections();
+            renderDashboard();
+        }
+
+        // ============ MODAL CLICK-OUTSIDE ============
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'voteModal') closeVoteModal();
+            if (e.target.id === 'createElectionModal') closeCreateElectionModal();
+        });
+
+        // ============ HAMBURGER MENU ============
+        document.getElementById('hamburgerBtn').addEventListener('click', function() {
+            document.getElementById('navbarNav').classList.toggle('open');
+        });
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navbarNav').classList.remove('open');
+            });
+        });
+
+        // ============ INITIALIZATION ============
+        function init() {
+            // Show login page
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('page-login').classList.add('active');
+            updateUIBasedOnRole();
+            console.log('🇿🇦 E-Vote Commission - Online Voting System Ready');
+            console.log('Springbok Colors: Green #006B3D | Gold #FFB81C');
+            console.log('Demo logins available - click demo buttons on login page');
+        }
+
+        init();
+    </script>
+</body>
+</html>
