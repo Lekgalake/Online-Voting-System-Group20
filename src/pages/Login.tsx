@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { ArrowRight, BadgeCheck, Fingerprint, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import type { AppUser } from '../types';
+import evcLogo from '../../Untitled design.png';
 
 const Login: React.FC = () => {
   const { setCurrentUser, voters, systemUsers, roles } = useData();
@@ -59,62 +61,100 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-page">
-      <div className="login-card">
+      <section className="login-hero-panel">
+        <div className="login-brand-lockup">
+          <img src={evcLogo} alt="E-Vote Commission logo" className="login-logo-img" />
+          <div>
+            <span>Official South African Electoral Platform</span>
+            <h1>E-Vote Commission</h1>
+          </div>
+        </div>
+
+        <div className="login-hero-content">
+          <span className="security-pill"><ShieldCheck size={18} /> Secured and verified voting</span>
+          <h2>Trusted digital elections for every citizen.</h2>
+          <p>Access national, provincial, and local elections through a professional voting portal designed for clarity, confidence, and integrity.</p>
+        </div>
+
+        <div className="trust-grid">
+          <div className="trust-item">
+            <BadgeCheck size={24} />
+            <span>Verified voters</span>
+          </div>
+          <div className="trust-item">
+            <Fingerprint size={24} />
+            <span>Identity protected</span>
+          </div>
+          <div className="trust-item">
+            <LockKeyhole size={24} />
+            <span>Secure access</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="login-card">
         <div className="login-header">
-          <div className="logo-circle">EVC</div>
-          <h1>E-Vote Commission</h1>
-          <p>Secure Online Voting System</p>
+          <img src={evcLogo} alt="E-Vote Commission logo" className="login-card-logo" />
+          <span className="eyebrow">Welcome back</span>
+          <h2>Sign in to your account</h2>
+          <p>Use your South African ID number or authorised staff username.</p>
         </div>
         <div className="login-body">
           {error && (
-            <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>
-              ❌ {error}
+            <div className="alert alert-error login-error">
+              {error}
             </div>
           )}
           <form onSubmit={handleLogin}>
             <div className="form-group">
               <label className="form-label">South African ID Number</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
-                placeholder="e.g. 9001015009087" 
-                maxLength={13} 
-                required 
-              />
+              <div className="input-with-icon">
+                <UserRound size={18} />
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value)}
+                  placeholder="e.g. 9001015009087" 
+                  maxLength={13} 
+                  required 
+                />
+              </div>
               <div className="form-hint">Enter your 13-digit SA ID number or Username</div>
             </div>
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input 
-                type="password" 
-                className="form-input" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password" 
-                required 
-              />
+              <div className="input-with-icon">
+                <LockKeyhole size={18} />
+                <input 
+                  type="password" 
+                  className="form-input" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password" 
+                  required 
+                />
+              </div>
             </div>
-            <button type="submit" className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
-              🔐 Sign In
+            <button type="submit" className="btn btn-gold btn-lg btn-full">
+              Sign In <ArrowRight size={18} />
             </button>
           </form>
-          <div className="login-divider">or</div>
-          <button className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={() => demoLogin('voter')}>
-            👤 Demo: Voter Login
+          <div className="login-divider"><span>Quick demo access</span></div>
+          <button className="btn btn-outline btn-full" onClick={() => demoLogin('voter')}>
+            Demo: Voter Login
           </button>
-          <button className="btn btn-outline-gold" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} onClick={() => demoLogin('admin')}>
-            ⚙️ Demo: Admin Login
+          <button className="btn btn-outline-gold btn-full demo-button-spaced" onClick={() => demoLogin('admin')}>
+            Demo: Admin Login
           </button>
-          <button className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} onClick={() => demoLogin('auditor')}>
-            📋 Demo: Auditor Login
+          <button className="btn btn-outline btn-full demo-button-spaced" onClick={() => demoLogin('auditor')}>
+            Demo: Auditor Login
           </button>
         </div>
         <div className="login-footer">
-          🇿🇦 Official Electoral System — Secured & Verified
+          Official Electoral System — Secured & Verified
         </div>
-      </div>
+      </section>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
-import { FileText, Search, Download } from 'lucide-react';
+import { Search, Download } from 'lucide-react';
 
 const AuditLog: React.FC = () => {
   const { auditLogs, currentUser } = useData();
