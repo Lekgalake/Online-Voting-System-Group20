@@ -9,6 +9,8 @@ import Candidates from './pages/Candidates';
 import AuditLog from './pages/AuditLog';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
+import VotingPage from "./pages/VotingPage";
+
 
 const AppContent: React.FC = () => {
   const { currentUser } = useData();
@@ -28,6 +30,7 @@ const AppContent: React.FC = () => {
           <Route path="/candidates" element={<Candidates />} />
           <Route path="/audit" element={<AuditLog />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/vote" element={<VotingPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
