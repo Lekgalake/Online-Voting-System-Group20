@@ -1,6 +1,5 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
-import { Users, UserCheck, UserX, Shield } from 'lucide-react';
 
 const Voters: React.FC = () => {
   const { voters, toggleVoterStatus, currentUser } = useData();

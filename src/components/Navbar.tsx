@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { LayoutDashboard, Vote, Users, Landmark, FileText, Settings, LogOut } from 'lucide-react';
+import evcLogo from '../../Untitled design.png';
 
 const Navbar: React.FC = () => {
   const { currentUser, setCurrentUser } = useData();
@@ -29,8 +30,10 @@ const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
       <Link to="/" className="navbar-brand">
-        <div className="navbar-logo">EVC</div>
-        <span>E-Vote Commission</span>
+        <img src={evcLogo} alt="E-Vote Commission logo" className="navbar-logo" />
+        <span className="navbar-brand-title">
+          <span>E-Vote Commission</span>
+        </span>
       </Link>
 
       <button 
@@ -62,8 +65,8 @@ const Navbar: React.FC = () => {
 
       <div className="nav-user-info">
         <div className="nav-avatar">{currentUser.displayName[0].toUpperCase()}</div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontWeight: 600 }}>{currentUser.displayName}</span>
+        <div className="nav-user-text">
+          <span className="nav-user-name">{currentUser.displayName}</span>
           <span className="badge-role">{currentUser.roleName}</span>
         </div>
       </div>

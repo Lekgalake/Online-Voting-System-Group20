@@ -1,6 +1,6 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
-import { Landmark, Users2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 const Candidates: React.FC = () => {
   const { candidates, parties, elections, currentUser } = useData();

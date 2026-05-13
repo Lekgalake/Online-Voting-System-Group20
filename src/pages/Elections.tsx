@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import type { Election, Candidate } from '../types';
-import { Vote, Plus } from 'lucide-react';
+import type { Election } from '../types';
+import { Plus } from 'lucide-react';
 
 const Elections: React.FC = () => {
   const { 

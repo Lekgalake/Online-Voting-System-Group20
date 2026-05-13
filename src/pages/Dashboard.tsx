@@ -65,21 +65,23 @@ const Dashboard: React.FC = () => {
       </div>
 
       {isVoter && activeElection && (
-        <div className="card" style={{ marginTop: '1.5rem' }}>
+        <div className="card quick-vote-card dashboard-card-spaced">
           <div className="card-header">
-            <h3>⚡ Quick Vote</h3>
+            <h3>Quick Vote</h3>
             <span className="table-badge badge-active">Active Now</span>
           </div>
           <div className="card-body">
-            <p style={{ marginBottom: '1rem' }}>You have an active election ready for your vote: <strong>{activeElection.election_name}</strong></p>
-            <button className="btn btn-gold btn-lg" onClick={() => navigate('/elections')}>
-              🗳️ Cast Your Vote Now
+            <span className="quick-vote-eyebrow">Your ballot is ready</span>
+            <h2>{activeElection.election_name}</h2>
+            <p>Review the candidates and securely submit your vote before the election closes.</p>
+            <button className="btn btn-gold btn-lg quick-vote-button" onClick={() => navigate('/elections')}>
+              Cast Your Vote Now
             </button>
           </div>
         </div>
       )}
 
-      <div className="card" style={{ marginTop: '1.5rem' }}>
+      <div className="card dashboard-card-spaced">
         <div className="card-header">
           <h3>📅 Recent Elections</h3>
           <button className="btn btn-gold btn-sm" onClick={() => navigate('/elections')}>View All</button>

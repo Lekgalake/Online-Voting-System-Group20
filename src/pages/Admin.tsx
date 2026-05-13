@@ -1,6 +1,6 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
-import { Settings, Shield, UserPlus, Key } from 'lucide-react';
+import { UserPlus, Key } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const { systemUsers, roles, currentUser } = useData();
