@@ -357,3 +357,152 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION luhn_check_digit(id12 TEXT)
+RETURNS INTEGER AS $$
+DECLARE
+    i INTEGER;
+    total INTEGER := 0;
+    digit_val INTEGER;
+BEGIN
+    FOR i IN 1..12 LOOP
+        digit_val := CAST(substring(id12, 13 - i, 1) AS INTEGER);
+        IF i % 2 = 0 THEN
+            digit_val := digit_val * 2;
+            IF digit_val > 9 THEN
+                digit_val := (digit_val / 10) + (digit_val % 10);
+            END IF;
+        END IF;
+        total := total + digit_val;
+    END LOOP;
+    RETURN (10 - (total % 10)) % 10;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION parse_sa_id(p_id CHAR(13))
+RETURNS TABLE (
+    valid BOOLEAN,
+    birth_date DATE,
+    age INTEGER,
+    gender VARCHAR(10),
+    citizenship VARCHAR(30),
+    error_message TEXT
+) AS $$
+DECLARE
+    id_str TEXT;
+    id12 TEXT;
+    provided_check INTEGER;
+    expected_check INTEGER;
+    yymmdd TEXT;
+    yy INTEGER;
+    mm INTEGER;
+    dd INTEGER;
+    birth_year INTEGER;
+    current_year INTEGER;
+    seq_part TEXT;
+    seq INTEGER;
+    citizen_digit CHAR(1);
+    birth_date_calc DATE;
+    age_calc INTEGER;
+    gender_calc VARCHAR(10);
+    citizenship_calc VARCHAR(30);
+BEGIN
+    valid := FALSE;
+    birth_date := NULL;
+    age := NULL;
+    gender := NULL;
+    citizenship := NULL;
+    error_message := NULL;
+
+    id_str := trim(p_id);
+    IF length(id_str) != 13 THEN
+        error_message := 'ID number must be exactly 13 digits';
+        RETURN NEXT;
+        RETURN;
+    END IF;
+
+    IF id_str !~ '^[0-9]{13}$' THEN
+        error_message := 'ID number contains non-digit characters';
+        RETURN NEXT;
+        RETURN;
+    END IF;
+
+    id12 := left(id_str, 12);
+    provided_check := CAST(right(id_str, 1) AS INTEGER);
+    expected_check := luhn_check_digit(id12);
+    IF provided_check != expected_check THEN
+        error_message := format('Invalid check digit: expected %s, got %s', expected_check, provided_check);
+        RETURN NEXT;
+        RETURN;
+    END IF;
+
+    yymmdd := substring(id_str, 1, 6);
+    seq_part := substring(id_str, 7, 4);
+    citizen_digit := substring(id_str, 11, 1);
+
+    yy := CAST(substring(yymmdd, 1, 2) AS INTEGER);
+    mm := CAST(substring(yymmdd, 3, 2) AS INTEGER);
+    dd := CAST(substring(yymmdd, 5, 2) AS INTEGER);
+
+    IF mm < 1 OR mm > 12 OR dd < 1 OR dd > 31 THEN
+        error_message := 'Invalid month or day in birth date';
+        RETURN NEXT;
+        RETURN;
+    END IF;
+
+    current_year := EXTRACT(YEAR FROM CURRENT_DATE);
+    birth_year := 1900 + yy;
+    IF birth_year + 100 <= current_year THEN
+        birth_year := 2000 + yy;
+    END IF;
+    IF birth_year > current_year THEN
+        birth_year := 1900 + yy;
+    END IF;
+
+    BEGIN
+        birth_date_calc := make_date(birth_year, mm, dd);
+        IF birth_date_calc > CURRENT_DATE THEN
+            error_message := 'Birth date cannot be in the future';
+            RETURN NEXT;
+            RETURN;
+        END IF;
+    EXCEPTION WHEN others THEN
+        error_message := 'Invalid date in ID number (e.g., 31st of February)';
+        RETURN NEXT;
+        RETURN;
+    END;
+
+    age_calc := EXTRACT(YEAR FROM age(CURRENT_DATE, birth_date_calc));
+
+    seq := CAST(seq_part AS INTEGER);
+    IF seq BETWEEN 0 AND 4999 THEN
+        gender_calc := 'Female';
+    ELSIF seq BETWEEN 5000 AND 9999 THEN
+        gender_calc := 'Male';
+    ELSE
+        error_message := format('Invalid gender sequence %s (must be 0000-9999)', seq_part);
+        RETURN NEXT;
+        RETURN;
+    END IF;
+
+    IF citizen_digit = '0' THEN
+        citizenship_calc := 'South African Citizen';
+    ELSIF citizen_digit = '1' THEN
+        citizenship_calc := 'Permanent Resident';
+    ELSIF citizen_digit = '2' THEN
+        citizenship_calc := 'Refugee';
+    ELSE
+        error_message := format('Invalid citizenship digit %s (must be 0,1,2)', citizen_digit);
+        RETURN NEXT;
+        RETURN;
+    END IF;
+
+    valid := TRUE;
+    birth_date := birth_date_calc;
+    age := age_calc;
+    gender := gender_calc;
+    citizenship := citizenship_calc;
+    error_message := NULL;
+
+    RETURN NEXT;
+END;
+$$ LANGUAGE plpgsql STABLE STRICT;
