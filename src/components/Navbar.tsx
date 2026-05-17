@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
   const isVoter = currentUser.type === 'voter';
   const roleName = currentUser.roleName;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setCurrentUser(null);
   };
 

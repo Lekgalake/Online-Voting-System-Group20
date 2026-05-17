@@ -2,26 +2,12 @@ import React, { useState } from 'react';
 import { ArrowRight, BadgeCheck, Fingerprint, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { supabase } from '../lib/supabase';
+import { validateSAID } from '../lib/validateSAID';
 import type { AppUser } from '../types';
 import evcLogo from '../../Untitled design.png';
 
-// Validate SA ID: 13 digits + age >= 18
-const validateSAID = (id: string): { valid: boolean; error?: string } => {
-  if (!/^\d{13}$/.test(id)) return { valid: false, error: 'ID must be exactly 13 digits.' };
-  const yy = parseInt(id.substring(0, 2));
-  const mm = parseInt(id.substring(2, 4));
-  const dd = parseInt(id.substring(4, 6));
-  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return { valid: false, error: 'ID contains an invalid date.' };
-  const currentYear = new Date().getFullYear();
-  const birthYear = yy + (yy + 2000 <= currentYear ? 2000 : 1900);
-  const birthDate = new Date(birthYear, mm - 1, dd);
-  const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-  if (age < 18) return { valid: false, error: 'Voter must be at least 18 years old.' };
-  return { valid: true };
-};
-
 const Login: React.FC = () => {
-  const { setCurrentUser } = useData();
+  const { setCurrentUser, addAuditLog } = useData();
   const [idNumber, setIdNumber] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -66,6 +52,7 @@ const Login: React.FC = () => {
           type: 'voter',
           data: voterData,
         };
+        await addAuditLog(`Voter login: ${voterData.voter_id}`, undefined, voterData.voter_id);
         setCurrentUser(user);
         return;
       }
@@ -87,6 +74,7 @@ const Login: React.FC = () => {
           type: 'system_user',
           data: sysUserData,
         };
+        await addAuditLog(`System user login: ${sysUserData.username} (${roleName})`, sysUserData.user_id);
         setCurrentUser(user);
         return;
       }

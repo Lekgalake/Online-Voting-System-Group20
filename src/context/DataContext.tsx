@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../lib/supabase';
 import type {
   Voter, Election, Party, Candidate, Participation,
-  AnonymousVote, SystemUser, Role, AuditLog, AppUser, VoterStatus
+  AnonymousVote, SystemUser, Role, AuditLog, AppUser, VoterStatus, ElectionStatus
 } from '../types';
 
 interface DataContextType {
@@ -21,7 +21,9 @@ interface DataContextType {
   addVote: (electionId: number, candidateId: number) => Promise<void>;
   addAuditLog: (action: string, userId?: number, voterId?: string) => Promise<void>;
   createElection: (election: Omit<Election, 'election_id'>) => Promise<void>;
+  updateElectionStatus: (electionId: number, status: ElectionStatus) => Promise<void>;
   toggleVoterStatus: (voterId: string) => Promise<void>;
+  toggleQualification: (voterId: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -86,28 +88,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [fetchAll]);
 
   const addAuditLog = useCallback(async (action: string, userId?: number, voterId?: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('audit_log')
       .insert({ user_id: userId ?? null, voter_id: voterId ?? null, action })
       .select()
       .single();
+    if (error) throw new Error(error.message);
     if (data) setAuditLogs(prev => [data as AuditLog, ...prev]);
   }, []);
 
   const addVote = useCallback(async (electionId: number, candidateId: number) => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.type !== 'voter') return;
 
-    const { error: pErr } = await supabase.from('participation').insert({
-      voter_id: currentUser.id,
-      election_id: electionId,
+    const { error } = await supabase.rpc('cast_vote', {
+      p_voter_id: currentUser.id,
+      p_election_id: electionId,
+      p_candidate_id: candidateId,
     });
-    if (pErr) throw new Error(pErr.message);
-
-    const { error: vErr } = await supabase.from('anonymous_vote').insert({
-      candidate_id: candidateId,
-      election_id: electionId,
-    });
-    if (vErr) throw new Error(vErr.message);
+    if (error) throw new Error(error.message);
 
     const [{ data: pData }, { data: vData }] = await Promise.all([
       supabase.from('participation').select('*').order('participation_time', { ascending: false }),
@@ -115,9 +113,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ]);
     if (pData) setParticipations(pData as Participation[]);
     if (vData) setAnonymousVotes(vData as AnonymousVote[]);
-
-    await addAuditLog(`Vote cast anonymously in Election #${electionId}`, undefined, currentUser.id);
-  }, [currentUser, addAuditLog]);
+  }, [currentUser]);
 
   const createElection = useCallback(async (electionData: Omit<Election, 'election_id'>) => {
     const { data, error } = await supabase
@@ -128,11 +124,38 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw new Error(error.message);
     if (data) {
       setElections(prev => [...prev, data as Election]);
-      if (currentUser) {
+      if (currentUser?.type === 'system_user') {
         await addAuditLog(`Created new election: ${electionData.election_name}`, parseInt(currentUser.id));
       }
     }
   }, [currentUser, addAuditLog]);
+
+  const updateElectionStatus = useCallback(async (electionId: number, status: ElectionStatus) => {
+    const election = elections.find(e => e.election_id === electionId);
+    if (status === 'Active') {
+      const candidateCount = candidates.filter(c => c.election_id === electionId).length;
+      if (candidateCount === 0) {
+        throw new Error('Add at least one candidate before activating this election.');
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('election')
+      .update({ status })
+      .eq('election_id', electionId)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    if (data) {
+      setElections(prev => prev.map(e => e.election_id === electionId ? (data as Election) : e));
+      if (currentUser?.type === 'system_user') {
+        await addAuditLog(
+          `Election #${electionId} (${election?.election_name ?? ''}) status set to ${status}`,
+          parseInt(currentUser.id)
+        );
+      }
+    }
+  }, [elections, candidates, currentUser, addAuditLog]);
 
   const toggleVoterStatus = useCallback(async (voterId: string) => {
     const voter = voters.find(v => v.voter_id === voterId);
@@ -146,10 +169,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw new Error(error.message);
 
     setVoters(prev => prev.map(v => v.voter_id === voterId ? { ...v, voter_status: newStatus } : v));
-    await addAuditLog(
-      `Changed voter ${voterId} status to ${newStatus}`,
-      currentUser ? parseInt(currentUser.id) : undefined
-    );
+    if (currentUser?.type === 'system_user') {
+      await addAuditLog(`Changed voter ${voterId} status to ${newStatus}`, parseInt(currentUser.id));
+    }
+  }, [voters, currentUser, addAuditLog]);
+
+  const toggleQualification = useCallback(async (voterId: string) => {
+    const voter = voters.find(v => v.voter_id === voterId);
+    if (!voter) return;
+    const newStatus = !voter.qualification_status;
+
+    const { error } = await supabase
+      .from('voter')
+      .update({ qualification_status: newStatus })
+      .eq('voter_id', voterId);
+    if (error) throw new Error(error.message);
+
+    setVoters(prev => prev.map(v => v.voter_id === voterId ? { ...v, qualification_status: newStatus } : v));
+    if (currentUser?.type === 'system_user') {
+      await addAuditLog(
+        `Voter ${voterId} qualification ${newStatus ? 'verified (manual — official records)' : 'revoked'}`,
+        parseInt(currentUser.id)
+      );
+    }
   }, [voters, currentUser, addAuditLog]);
 
   return (
@@ -158,7 +200,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       anonymousVotes, systemUsers, roles, auditLogs,
       currentUser, loading,
       setCurrentUser, addVote, addAuditLog,
-      createElection, toggleVoterStatus,
+      createElection, updateElectionStatus, toggleVoterStatus, toggleQualification,
       refreshData: fetchAll,
     }}>
       {children}

@@ -1,37 +1,11 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { supabase } from '../lib/supabase';
+import { validateSAID } from '../lib/validateSAID';
 import { UserPlus, X } from 'lucide-react';
 
-// Luhn check digit calculation (mirrors the DB function)
-const luhnCheckDigit = (id12: string): number => {
-  let total = 0;
-  for (let i = 1; i <= 12; i++) {
-    let d = parseInt(id12[12 - i]);
-    if (i % 2 === 0) { d *= 2; if (d > 9) d = Math.floor(d / 10) + (d % 10); }
-    total += d;
-  }
-  return (10 - (total % 10)) % 10;
-};
-
-const validateSAID = (id: string): string | null => {
-  if (!/^\d{13}$/.test(id)) return 'ID must be exactly 13 digits.';
-  const mm = parseInt(id.substring(2, 4));
-  const dd = parseInt(id.substring(4, 6));
-  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return 'ID contains an invalid date.';
-  const yy = parseInt(id.substring(0, 2));
-  const currentYear = new Date().getFullYear();
-  const birthYear = yy + (yy + 2000 <= currentYear ? 2000 : 1900);
-  const birthDate = new Date(birthYear, mm - 1, dd);
-  const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-  if (age < 18) return 'Voter must be at least 18 years old.';
-  const check = luhnCheckDigit(id.substring(0, 12));
-  if (check !== parseInt(id[12])) return `Invalid ID check digit (expected ${check}).`;
-  return null;
-};
-
 const Voters: React.FC = () => {
-  const { voters, toggleVoterStatus, currentUser, refreshData } = useData();
+  const { voters, toggleVoterStatus, toggleQualification, currentUser, refreshData, addAuditLog } = useData();
   const [showModal, setShowModal] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -59,8 +33,8 @@ const Voters: React.FC = () => {
     setFormError('');
     setFormSuccess('');
 
-    const idError = validateSAID(voterId);
-    if (idError) { setFormError(idError); return; }
+    const idValidation = validateSAID(voterId);
+    if (!idValidation.valid) { setFormError(idValidation.error!); return; }
 
     // Check uniqueness
     const existing = voters.find(v => v.voter_id === voterId);
@@ -77,6 +51,10 @@ const Voters: React.FC = () => {
         qualification_status: false, // Requires manual verification
       });
       if (error) throw error;
+      await addAuditLog(
+        `Voter registered: ${voterId} (${fullName} ${surname})`,
+        parseInt(currentUser.id)
+      );
       await refreshData();
       setFormSuccess(`Voter ${fullName} ${surname} registered successfully. Qualification pending verification.`);
       setVoterId(''); setFullName(''); setSurname(''); setPassword('');
@@ -130,7 +108,13 @@ const Voters: React.FC = () => {
                         {v.qualification_status ? 'Verified' : 'Pending'}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        className={`btn btn-sm ${v.qualification_status ? 'btn-outline' : 'btn-gold'}`}
+                        onClick={() => toggleQualification(v.voter_id)}
+                      >
+                        {v.qualification_status ? 'Revoke' : 'Verify'}
+                      </button>
                       <button
                         className="btn btn-outline btn-sm"
                         onClick={() => toggleVoterStatus(v.voter_id)}
@@ -183,7 +167,7 @@ const Voters: React.FC = () => {
                 <div className="form-group">
                   <label className="form-label">Initial Password</label>
                   <input type="password" className="form-input" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-                  <div className="form-hint">Voter will use this to log in. Qualification status requires manual verification after registration.</div>
+                  <div className="form-hint">Voter will use this to log in. Use Verify after manual confirmation against official records (Home Affairs integration pending).</div>
                 </div>
                 <button type="submit" className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={isSubmitting}>
                   {isSubmitting ? 'Registering…' : 'Register Voter'}

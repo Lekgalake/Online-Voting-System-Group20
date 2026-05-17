@@ -29,10 +29,14 @@ const Dashboard: React.FC = () => {
       { label: 'Status', value: currentUser.data.qualification_status ? 'Verified' : 'Pending', icon: <ShieldCheck className="stat-icon gold" />, color: 'gold' },
     ];
   } else {
+    const closedElectionIds = new Set(
+      elections.filter(e => e.status === 'Closed' && !e.result_locked).map(e => e.election_id)
+    );
+    const publishedVoteCount = anonymousVotes.filter(v => closedElectionIds.has(v.election_id)).length;
     stats = [
       { label: 'Registered Voters', value: voters.length, icon: <Users className="stat-icon green" />, color: 'green' },
       { label: 'Total Elections', value: totalElections, icon: <Calendar className="stat-icon gold" />, color: 'gold' },
-      { label: 'Votes Cast', value: anonymousVotes.length, icon: <BarChart3 className="stat-icon green" />, color: 'green' },
+      { label: 'Published Results', value: publishedVoteCount, icon: <BarChart3 className="stat-icon green" />, color: 'green' },
       { label: 'Active Now', value: activeElectionsCount, icon: <Zap className="stat-icon gold" />, color: 'gold' },
     ];
   }

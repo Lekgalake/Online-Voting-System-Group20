@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProvider, useData } from './context/DataContext';
+import { useSessionTimeout } from './hooks/useSessionTimeout';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Elections from './pages/Elections';
@@ -13,7 +14,23 @@ import VotingPage from "./pages/VotingPage";
 
 
 const AppContent: React.FC = () => {
-  const { currentUser } = useData();
+  const { currentUser, setCurrentUser, addAuditLog } = useData();
+
+  const handleSessionTimeout = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      if (currentUser.type === 'voter') {
+        await addAuditLog('Session expired due to inactivity', undefined, currentUser.id);
+      } else {
+        await addAuditLog('Session expired due to inactivity', parseInt(currentUser.id));
+      }
+    } catch {
+      // still log out if audit insert fails
+    }
+    setCurrentUser(null);
+  }, [currentUser, addAuditLog, setCurrentUser]);
+
+  useSessionTimeout(handleSessionTimeout, !!currentUser);
 
   if (!currentUser) {
     return <Login />;

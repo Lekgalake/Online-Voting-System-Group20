@@ -6,7 +6,7 @@ import { Plus, Lock } from 'lucide-react';
 const Elections: React.FC = () => {
   const {
     currentUser, elections, candidates, parties, anonymousVotes,
-    participations, addVote, createElection
+    participations, addVote, createElection, updateElectionStatus
   } = useData();
 
   const [selectedElection, setSelectedElection] = useState<Election | null>(null);
@@ -90,10 +90,9 @@ const Elections: React.FC = () => {
     }
   };
 
-  // Results only available for closed elections (business rule: locked until Closed)
   const getResults = (electionId: number) => {
     const election = elections.find(e => e.election_id === electionId);
-    if (!election || election.status !== 'Closed') return [];
+    if (!election || election.status !== 'Closed' || election.result_locked) return [];
     const electionVotes = anonymousVotes.filter(v => v.election_id === electionId);
     return candidates
       .filter(c => c.election_id === electionId)
@@ -112,6 +111,15 @@ const Elections: React.FC = () => {
 
   const results = viewingResultsId ? getResults(viewingResultsId) : [];
   const resultsElection = elections.find(e => e.election_id === viewingResultsId);
+
+  const handleStatusChange = async (electionId: number, status: 'Active' | 'Closed') => {
+    try {
+      await updateElectionStatus(electionId, status);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update election status.';
+      alert(message);
+    }
+  };
 
   return (
     <div className="page-section active">
@@ -187,7 +195,22 @@ const Elections: React.FC = () => {
                             <Lock size={12} /> Voting in progress
                           </span>
                         )}
-                        {el.status === 'Upcoming' && <span style={{ color: 'var(--gray-400)' }}>—</span>}
+                        {canManageElections && el.status === 'Upcoming' && (
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleStatusChange(el.election_id, 'Active')}
+                            disabled={!candidates.some(c => c.election_id === el.election_id)}
+                            title={candidates.some(c => c.election_id === el.election_id) ? 'Activate election' : 'Add candidates first'}
+                          >
+                            Activate
+                          </button>
+                        )}
+                        {canManageElections && el.status === 'Active' && (
+                          <button className="btn btn-outline btn-sm" onClick={() => handleStatusChange(el.election_id, 'Closed')}>
+                            Close
+                          </button>
+                        )}
+                        {el.status === 'Upcoming' && !canManageElections && <span style={{ color: 'var(--gray-400)' }}>—</span>}
                       </td>
                     </tr>
                   );
@@ -199,7 +222,7 @@ const Elections: React.FC = () => {
       </div>
 
       {/* Results panel — only for Closed elections */}
-      {viewingResultsId && resultsElection && resultsElection.status === 'Closed' && (
+      {viewingResultsId && resultsElection && resultsElection.status === 'Closed' && !resultsElection.result_locked && (
         <div className="card" style={{ marginTop: '1.5rem' }}>
           <div className="card-header">
             <h3>📊 Election Results: {resultsElection.election_name}</h3>
@@ -329,7 +352,7 @@ const Elections: React.FC = () => {
                   </div>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '1rem' }}>
-                  ⚠️ Elections cannot be modified once voting has started.
+                  Add at least one candidate on the Candidates page before activating. Elections cannot be modified once voting has started.
                 </p>
                 <button type="submit" className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
                   Create Election
