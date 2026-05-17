@@ -1,5 +1,5 @@
 export type ElectionStatus = 'Active' | 'Upcoming' | 'Closed';
-export type VoterStatus = 'active' | 'suspended' | 'pending';
+export type VoterStatus = 'active' | 'inactive' | 'suspended' | 'pending';
 export type UserRole = 'System Administrator' | 'Election Administrator' | 'IT Support Team' | 'Auditor' | 'Voter';
 
 export interface Voter {
@@ -19,6 +19,7 @@ export interface Election {
   end_date: string;
   status: ElectionStatus;
   result_locked: boolean;
+  created_at?: string;
 }
 
 export interface Party {
