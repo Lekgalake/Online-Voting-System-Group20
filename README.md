@@ -15,7 +15,31 @@ Follow these instructions to get the project up and running on your local machin
 - **Node.js**: Version 18.0 or higher
 - **npm**: Version 9.0 or higher
 
-### Option 1: Download the ZIP Folder
+### Recommended: Clone the Repository
+
+Open **Windows PowerShell** and run:
+
+```powershell
+cd "$env:USERPROFILE\OneDrive\Desktop"
+git clone https://github.com/Lekgalake/Online-Voting-System-Group20.git
+cd Online-Voting-System-Group20
+npm install
+npm run dev
+```
+
+The application will be available at:
+
+```text
+http://localhost:5173
+```
+
+If PowerShell blocks npm scripts, run:
+
+```powershell
+npm.cmd run dev
+```
+
+### Alternative: Download the ZIP Folder
 
 1. Go to the GitHub repository:
 
@@ -37,53 +61,66 @@ Follow these instructions to get the project up and running on your local machin
    cd "C:\Users\mulon\OneDrive\Desktop\Online-Voting-System-Group20-main"
    ```
 
-### Option 2: Clone the Repository
+7. Install dependencies and run the app:
 
-If you prefer using Git, open PowerShell and run:
-
-```bash
-git clone https://github.com/Lekgalake/Online-Voting-System-Group20.git
-cd Online-Voting-System-Group20
-```
+   ```powershell
+   npm install
+   npm run dev
+   ```
 
 ### Environment Setup
 
-Create a `.env` file in the project root folder and add your Supabase credentials:
+The app connects to Supabase using a `.env` file in the project root folder.
+
+The `.env` file must be in the same folder as:
+
+```text
+package.json
+vite.config.ts
+src
+```
+
+For this group project, the local `.env` should use Vite variable names:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_URL=https://akbbucujvktlvahiyfho.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_publishable_key
 ```
 
-You can find these values in **Supabase Dashboard** > **Project Settings** > **API**.
+If you need to check that `.env` is in the correct place, run this in PowerShell from inside the project folder:
 
-### Install Dependencies
-
-Run this inside the project folder:
-
-```bash
-npm install
+```powershell
+dir .env
+dir package.json
 ```
 
-### Running Locally
+Both files should appear.
 
-To start the development server with Hot Module Replacement (HMR):
+If `.env` is missing, create it:
 
-```bash
+```powershell
+notepad .env
+```
+
+Paste the Supabase values, save the file, then restart the dev server.
+
+### Restart After Editing `.env`
+
+Vite only reads `.env` when the server starts. After changing `.env`, stop and restart the server:
+
+```powershell
+Ctrl + C
 npm run dev
 ```
 
-The application will be available at:
+### Demo Login
 
-```text
-http://localhost:5173
-```
+After the app opens, test with:
 
-If PowerShell blocks npm scripts, run:
-
-```bash
-npm.cmd run dev
-```
+- **Admin username**: `admin`
+- **Admin password**: `admin123`
+- **Voter ID**: `9001015009087`
+- **Voter password**: `pass123`
 
 ### Building for Production
 
