@@ -12,6 +12,7 @@ CREATE TABLE voter (
     voter_id CHAR(13) PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     surname VARCHAR(100) NOT NULL,
+    race VARCHAR(50),
     password_hash TEXT NOT NULL,
     voter_status VARCHAR(20) NOT NULL
         CHECK (voter_status IN ('active', 'inactive', 'suspended')),
@@ -152,11 +153,12 @@ ON audit_log(user_id);
 CREATE INDEX idx_audit_voter
 ON audit_log(voter_id);
 
-INSERT INTO role (role_name)
+INSERT INTO role (role_id, role_name)
 VALUES
-('System Administrator'),
-('Election Administrator'),
-('Auditor');
+(1, 'System Administrator'),
+(2, 'Election Administrator'),
+(3, 'IT Support Team'),
+(4, 'Auditor');
 
 CREATE OR REPLACE FUNCTION check_election_active()
 RETURNS TRIGGER
@@ -183,10 +185,6 @@ BEGIN
         RAISE EXCEPTION 'Voting is outside election period';
     END IF;
 
-    IF election_record.result_locked = TRUE THEN
-        RAISE EXCEPTION 'Election results are locked';
-    END IF;
-
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -200,11 +198,24 @@ CREATE OR REPLACE FUNCTION prevent_election_update()
 RETURNS TRIGGER
 AS $$
 BEGIN
+    IF NEW.status IS DISTINCT FROM OLD.status THEN
+        IF OLD.status = 'Closed' AND NEW.status <> 'Closed' THEN
+            RAISE EXCEPTION
+            'Closed elections cannot be reopened';
+        END IF;
+
+        RETURN NEW;
+    END IF;
+
+    IF OLD.status = 'Closed' THEN
+        RAISE EXCEPTION
+        'Closed elections cannot be modified';
+    END IF;
 
     IF OLD.status = 'Active'
        OR CURRENT_TIMESTAMP >= OLD.start_date THEN
         RAISE EXCEPTION
-        'Election cannot be modified after voting has started';
+        'Election details cannot be modified after voting has started';
     END IF;
 
     RETURN NEW;

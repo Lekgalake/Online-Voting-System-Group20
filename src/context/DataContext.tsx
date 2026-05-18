@@ -1,8 +1,22 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { 
   Voter, Election, Party, Candidate, Participation, 
   AnonymousVote, SystemUser, Role, AuditLog, AppUser, VoterStatus 
 } from '../types';
+import { supabase } from '../lib/supabaseClient';
+
+const getSupabaseErrorMessage = (error: unknown, fallback: string) => {
+  if (!error || typeof error !== 'object') return fallback;
+
+  const details = error as { message?: string; details?: string; hint?: string; code?: string };
+  if (details.message === 'Election cannot be modified after voting has started') {
+    return 'Your Supabase election trigger is still blocking status changes. Run supabase-fix-election-status-trigger.sql in the Supabase SQL editor, then try again.';
+  }
+
+  return [details.message, details.details, details.hint, details.code ? `Code: ${details.code}` : '']
+    .filter(Boolean)
+    .join(' ');
+};
 
 interface DataContextType {
   voters: Voter[];
@@ -16,83 +30,78 @@ interface DataContextType {
   auditLogs: AuditLog[];
   currentUser: AppUser | null;
   setCurrentUser: (user: AppUser | null) => void;
-  addVote: (electionId: number, candidateId: number) => void;
+  refreshData: () => Promise<void>;
+  addVote: (electionId: number, candidateId: number) => Promise<void>;
   addAuditLog: (action: string, userId?: number, voterId?: string) => void;
-  createElection: (election: Omit<Election, 'election_id'>) => void;
+  createElection: (election: Omit<Election, 'election_id'>) => Promise<void>;
+  updateElectionStatus: (electionId: number, status: Election['status']) => Promise<void>;
+  createParty: (partyName: string) => Promise<void>;
+  updateParty: (partyId: number, partyName: string) => Promise<void>;
+  deleteParty: (partyId: number) => Promise<void>;
+  createCandidate: (candidateName: string, partyId: number, electionId: number) => Promise<void>;
   toggleVoterStatus: (voterId: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [voters, setVoters] = useState<Voter[]>([
-    { voter_id: '9001015009087', full_name: 'Thabo', surname: 'Molefe', password_hash: 'pass123', voter_status: 'active', qualification_status: true },
-    { voter_id: '8505206018082', full_name: 'Lerato', surname: 'Dlamini', password_hash: 'pass123', voter_status: 'active', qualification_status: true },
-    { voter_id: '9203156023095', full_name: 'Sipho', surname: 'Nkosi', password_hash: 'pass123', voter_status: 'suspended', qualification_status: false },
-    { voter_id: '7808305034083', full_name: 'Precious', surname: 'Mahlangu', password_hash: 'pass123', voter_status: 'active', qualification_status: true },
-    { voter_id: '9604125041080', full_name: 'Kagiso', surname: 'Modise', password_hash: 'pass123', voter_status: 'active', qualification_status: true },
-  ]);
+  const [voters, setVoters] = useState<Voter[]>([]);
 
-  const [elections, setElections] = useState<Election[]>([
-    { election_id: 1, election_name: 'National General Election 2026', election_type: 'National', start_date: '2026-05-01T08:00', end_date: '2026-06-15T20:00', status: 'Active', result_locked: false },
-    { election_id: 2, election_name: 'Gauteng Provincial Election', election_type: 'Provincial', start_date: '2026-07-01T08:00', end_date: '2026-07-20T20:00', status: 'Upcoming', result_locked: false },
-    { election_id: 3, election_name: 'Cape Town Municipal Election', election_type: 'Local', start_date: '2025-11-01T08:00', end_date: '2025-11-15T20:00', status: 'Closed', result_locked: true },
-  ]);
+  const [elections, setElections] = useState<Election[]>([]);
 
-  const [parties] = useState<Party[]>([
-    { party_id: 1, party_name: 'African National Congress' },
-    { party_id: 2, party_name: 'Democratic Alliance' },
-    { party_id: 3, party_name: 'Economic Freedom Fighters' },
-    { party_id: 4, party_name: 'Inkatha Freedom Party' },
-    { party_id: 5, party_name: 'Freedom Front Plus' },
-  ]);
+  const [parties, setParties] = useState<Party[]>([]);
 
-  const [candidates] = useState<Candidate[]>([
-    { candidate_id: 1, candidate_name: 'Cyril Ramaphosa', party_id: 1, election_id: 1 },
-    { candidate_id: 2, candidate_name: 'John Steenhuisen', party_id: 2, election_id: 1 },
-    { candidate_id: 3, candidate_name: 'Julius Malema', party_id: 3, election_id: 1 },
-    { candidate_id: 4, candidate_name: 'Velenkosini Hlabisa', party_id: 4, election_id: 1 },
-    { candidate_id: 5, candidate_name: 'Pieter Groenewald', party_id: 5, election_id: 1 },
-    { candidate_id: 6, candidate_name: 'Panyaza Lesufi', party_id: 1, election_id: 2 },
-    { candidate_id: 7, candidate_name: 'Solly Msimanga', party_id: 2, election_id: 2 },
-    { candidate_id: 8, candidate_name: 'Geordin Hill-Lewis', party_id: 2, election_id: 3 },
-    { candidate_id: 9, candidate_name: 'Cameron Dugmore', party_id: 1, election_id: 3 },
-  ]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
 
-  const [participations, setParticipations] = useState<Participation[]>([
-    { participation_id: 1, voter_id: '8505206018082', election_id: 1, participation_time: '2026-05-02T10:30:00' },
-  ]);
+  const [participations, setParticipations] = useState<Participation[]>([]);
 
-  const [anonymousVotes, setAnonymousVotes] = useState<AnonymousVote[]>([
-    { vote_receipt_id: 1, candidate_id: 2, election_id: 1, vote_timestamp: '2026-05-02T10:30:05' },
-    { vote_receipt_id: 2, candidate_id: 8, election_id: 3, vote_timestamp: '2025-11-10T09:00:00' },
-    { vote_receipt_id: 3, candidate_id: 8, election_id: 3, vote_timestamp: '2025-11-10T10:30:00' },
-    { vote_receipt_id: 4, candidate_id: 9, election_id: 3, vote_timestamp: '2025-11-10T11:45:00' },
-  ]);
+  const [anonymousVotes, setAnonymousVotes] = useState<AnonymousVote[]>([]);
 
-  const [systemUsers] = useState<SystemUser[]>([
-    { user_id: 1, username: 'admin', password_hash: 'admin123', role_id: 1, log_time: '2026-05-10T08:00:00' },
-    { user_id: 2, username: 'election_admin', password_hash: 'admin123', role_id: 2, log_time: '2026-05-10T08:30:00' },
-    { user_id: 3, username: 'auditor1', password_hash: 'audit123', role_id: 4, log_time: '2026-05-10T09:00:00' },
-    { user_id: 4, username: 'itsupport', password_hash: 'it123', role_id: 3, log_time: '2026-05-10T07:00:00' },
-  ]);
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
 
-  const [roles] = useState<Role[]>([
-    { role_id: 1, role_name: 'System Administrator' },
-    { role_id: 2, role_name: 'Election Administrator' },
-    { role_id: 3, role_name: 'IT Support Team' },
-    { role_id: 4, role_name: 'Auditor' },
-  ]);
+  const [roles, setRoles] = useState<Role[]>([]);
 
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
-    { log_id: 1, user_id: 1, voter_id: null, action: 'System Administrator logged in', log_time: '2026-05-10T08:00:00' },
-    { log_id: 2, user_id: null, voter_id: '9001015009087', action: 'Voter registered successfully', log_time: '2026-05-09T14:20:00' },
-    { log_id: 3, user_id: null, voter_id: '8505206018082', action: 'Vote cast in Election #1', log_time: '2026-05-02T10:30:05' },
-    { log_id: 4, user_id: 2, voter_id: null, action: 'Election Administrator created Election #2', log_time: '2026-05-08T11:00:00' },
-    { log_id: 5, user_id: 3, voter_id: null, action: 'Auditor reviewed activity logs', log_time: '2026-05-10T09:15:00' },
-  ]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+
+  const refreshData = async () => {
+    const [
+      votersResponse,
+      electionsResponse,
+      partiesResponse,
+      candidatesResponse,
+      participationsResponse,
+      votesResponse,
+      systemUsersResponse,
+      rolesResponse,
+      auditLogsResponse
+    ] = await Promise.all([
+      supabase.from('voter').select('*').order('created_at', { ascending: false }),
+      supabase.from('election').select('*').order('election_id'),
+      supabase.from('party').select('*').order('party_id'),
+      supabase.from('candidate').select('*').order('candidate_id'),
+      supabase.from('participation').select('*').order('participation_id'),
+      supabase.from('anonymous_vote').select('*').order('vote_receipt_id'),
+      supabase.from('admin_user').select('*').order('user_id'),
+      supabase.from('role').select('*').order('role_id'),
+      supabase.from('audit_log').select('*').order('log_time', { ascending: false })
+    ]);
+
+    if (!votersResponse.error) setVoters(votersResponse.data || []);
+    if (!electionsResponse.error) setElections(electionsResponse.data || []);
+    if (!partiesResponse.error) setParties(partiesResponse.data || []);
+    if (!candidatesResponse.error) setCandidates(candidatesResponse.data || []);
+    if (!participationsResponse.error) setParticipations(participationsResponse.data || []);
+    if (!votesResponse.error) setAnonymousVotes(votesResponse.data || []);
+    if (!systemUsersResponse.error) setSystemUsers(systemUsersResponse.data || []);
+    if (!rolesResponse.error) setRoles(rolesResponse.data || []);
+    if (!auditLogsResponse.error) setAuditLogs(auditLogsResponse.data || []);
+  };
+
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   const addAuditLog = (action: string, userId?: number, voterId?: string) => {
     const newLog: AuditLog = {
@@ -105,57 +114,174 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuditLogs(prev => [newLog, ...prev]);
   };
 
-  const addVote = (electionId: number, candidateId: number) => {
+  const addVote = async (electionId: number, candidateId: number) => {
     if (!currentUser) return;
-    
-    const participationId = participations.length + 1;
-    const newParticipation: Participation = {
-      participation_id: participationId,
-      voter_id: currentUser.id,
-      election_id: electionId,
-      participation_time: new Date().toISOString(),
-    };
 
-    const newVote: AnonymousVote = {
-      vote_receipt_id: anonymousVotes.length + 1,
-      candidate_id: candidateId,
-      election_id: electionId,
-      vote_timestamp: new Date().toISOString(),
-    };
+    const { data: candidate, error: candidateError } = await supabase
+      .from('candidate')
+      .select('candidate_id, election_id')
+      .eq('candidate_id', candidateId)
+      .single();
 
-    setParticipations(prev => [...prev, newParticipation]);
-    setAnonymousVotes(prev => [...prev, newVote]);
-    addAuditLog(`Vote cast anonymously in Election #${electionId}`, undefined, currentUser.id);
+    if (candidateError) {
+      throw new Error(getSupabaseErrorMessage(candidateError, 'Unable to verify selected candidate.'));
+    }
+
+    if (!candidate || candidate.election_id !== electionId) {
+      throw new Error('The selected candidate does not belong to this election.');
+    }
+
+    const { error: participationError } = await supabase
+      .from('participation')
+      .insert({
+        voter_id: currentUser.id,
+        election_id: electionId
+      });
+
+    if (participationError) {
+      throw new Error(getSupabaseErrorMessage(participationError, 'Unable to record voter participation.'));
+    }
+
+    const { error: voteError } = await supabase
+      .from('anonymous_vote')
+      .insert({
+        candidate_id: candidateId,
+        election_id: electionId
+      });
+
+    if (voteError) {
+      await supabase
+        .from('participation')
+        .delete()
+        .eq('voter_id', currentUser.id)
+        .eq('election_id', electionId);
+
+      throw new Error(getSupabaseErrorMessage(voteError, 'Unable to record vote.'));
+    }
+
+    await refreshData();
+    addAuditLog(`Vote cast in Election #${electionId}`, undefined, currentUser.id);
   };
 
-  const createElection = (electionData: Omit<Election, 'election_id'>) => {
-    const newElection: Election = {
-      ...electionData,
-      election_id: elections.length + 1,
-    };
-    setElections(prev => [...prev, newElection]);
+  const createElection = async (electionData: Omit<Election, 'election_id'>) => {
+    const { data, error } = await supabase
+      .from('election')
+      .insert(electionData)
+      .select()
+      .single();
+
+    if (error) throw new Error(getSupabaseErrorMessage(error, 'Unable to create election.'));
+
+    await refreshData();
     if (currentUser) {
-      addAuditLog(`Created new election: ${newElection.election_name}`, parseInt(currentUser.id));
+      addAuditLog(`Created new election: ${data.election_name}`, parseInt(currentUser.id));
+    }
+  };
+
+  const updateElectionStatus = async (electionId: number, status: Election['status']) => {
+    const { error } = await supabase
+      .from('election')
+      .update({ status })
+      .eq('election_id', electionId);
+
+    if (error) throw new Error(getSupabaseErrorMessage(error, 'Unable to update election status.'));
+
+    await refreshData();
+    if (currentUser) {
+      addAuditLog(`Changed election #${electionId} status to ${status}`, parseInt(currentUser.id));
+    }
+  };
+
+  const createParty = async (partyName: string) => {
+    const { error } = await supabase
+      .from('party')
+      .insert({ party_name: partyName });
+
+    if (error) throw new Error(getSupabaseErrorMessage(error, 'Unable to create political party.'));
+
+    await refreshData();
+    if (currentUser) {
+      addAuditLog(`Created political party: ${partyName}`, parseInt(currentUser.id));
+    }
+  };
+
+  const updateParty = async (partyId: number, partyName: string) => {
+    const { error } = await supabase
+      .from('party')
+      .update({ party_name: partyName })
+      .eq('party_id', partyId);
+
+    if (error) throw new Error(getSupabaseErrorMessage(error, 'Unable to update political party.'));
+
+    await refreshData();
+    if (currentUser) {
+      addAuditLog(`Updated political party #${partyId}: ${partyName}`, parseInt(currentUser.id));
+    }
+  };
+
+  const deleteParty = async (partyId: number) => {
+    const { error } = await supabase
+      .from('party')
+      .delete()
+      .eq('party_id', partyId);
+
+    if (error) throw new Error(getSupabaseErrorMessage(error, 'Unable to delete political party.'));
+
+    await refreshData();
+    if (currentUser) {
+      addAuditLog(`Deleted political party #${partyId}`, parseInt(currentUser.id));
+    }
+  };
+
+  const createCandidate = async (candidateName: string, partyId: number, electionId: number) => {
+    const { error } = await supabase
+      .from('candidate')
+      .insert({
+        candidate_name: candidateName,
+        party_id: partyId,
+        election_id: electionId
+      });
+
+    if (error) throw new Error(getSupabaseErrorMessage(error, 'Unable to create candidate.'));
+
+    await refreshData();
+    if (currentUser) {
+      addAuditLog(`Created candidate: ${candidateName}`, parseInt(currentUser.id));
     }
   };
 
   const toggleVoterStatus = (voterId: string) => {
+    const voter = voters.find(v => v.voter_id === voterId);
+    if (!voter) return;
+
+    const newStatus: VoterStatus = voter.voter_status === 'active' ? 'suspended' : 'active';
+
     setVoters(prev => prev.map(v => {
       if (v.voter_id === voterId) {
-        const newStatus: VoterStatus = v.voter_status === 'active' ? 'suspended' : 'active';
-        addAuditLog(`Changed voter ${voterId} status to ${newStatus}`, currentUser ? parseInt(currentUser.id) : undefined);
         return { ...v, voter_status: newStatus };
       }
       return v;
     }));
+
+    supabase
+      .from('voter')
+      .update({ voter_status: newStatus })
+      .eq('voter_id', voterId)
+      .then(({ error }) => {
+        if (error) {
+          setVoters(prev => prev.map(v => v.voter_id === voterId ? voter : v));
+          return;
+        }
+        addAuditLog(`Changed voter ${voterId} status to ${newStatus}`, currentUser ? parseInt(currentUser.id) : undefined);
+      });
   };
 
   return (
     <DataContext.Provider value={{
       voters, elections, parties, candidates, participations,
       anonymousVotes, systemUsers, roles, auditLogs,
-      currentUser, setCurrentUser, addVote, addAuditLog,
-      createElection, toggleVoterStatus
+      currentUser, setCurrentUser, refreshData, addVote, addAuditLog,
+      createElection, updateElectionStatus, createParty, updateParty, deleteParty, createCandidate, toggleVoterStatus
     }}>
       {children}
     </DataContext.Provider>

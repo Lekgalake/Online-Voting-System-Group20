@@ -6,6 +6,7 @@ export interface Voter {
   voter_id: string;
   full_name: string;
   surname: string;
+  race?: string | null;
   password_hash: string;
   voter_status: VoterStatus;
   qualification_status: boolean;

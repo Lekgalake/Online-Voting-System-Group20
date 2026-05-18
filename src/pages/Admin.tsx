@@ -4,6 +4,12 @@ import { UserPlus, Key } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const { systemUsers, roles, currentUser } = useData();
+  const roleDescriptions: Record<string, string> = {
+    'System Administrator': 'Main admin. Can access all management areas including voters, candidates, audit logs, and system users.',
+    'Election Administrator': 'Manages election setup, candidates, and election operations.',
+    'IT Support Team': 'Supports technical operations and user access issues.',
+    'Auditor': 'Reviews audit logs and election activity for compliance.'
+  };
 
   if (!currentUser || currentUser.roleName !== 'System Administrator') return null;
 
@@ -62,6 +68,7 @@ const Admin: React.FC = () => {
                   <tr>
                     <th>Role ID</th>
                     <th>Role Name</th>
+                    <th>Purpose</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -69,6 +76,7 @@ const Admin: React.FC = () => {
                     <tr key={r.role_id}>
                       <td>#{r.role_id}</td>
                       <td><strong>{r.role_name}</strong></td>
+                      <td>{roleDescriptions[r.role_name] || 'System role'}</td>
                     </tr>
                   ))}
                 </tbody>

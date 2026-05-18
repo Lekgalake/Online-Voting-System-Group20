@@ -2,60 +2,126 @@ import React, { useState } from 'react';
 import { ArrowRight, BadgeCheck, Fingerprint, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import type { AppUser } from '../types';
+import { supabase } from '../lib/supabaseClient';
 import evcLogo from '../../Untitled design.png';
 
 const Login: React.FC = () => {
-  const { setCurrentUser, voters, systemUsers, roles } = useData();
+  const { setCurrentUser, refreshData } = useData();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [loginType, setLoginType] = useState<'voter' | 'admin'>('voter');
   const [idNumber, setIdNumber] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [race, setRace] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    setLoading(true);
 
-    // Try voter login
-    const voter = voters.find(v => v.voter_id === idNumber && v.password_hash === password);
-    if (voter) {
-      const user: AppUser = {
-        id: voter.voter_id,
-        displayName: `${voter.full_name} ${voter.surname}`,
-        roleName: 'Voter',
-        type: 'voter',
-        data: voter
-      };
-      setCurrentUser(user);
-      return;
+    try {
+      if (loginType === 'voter') {
+        const { data: voter, error: voterError } = await supabase
+          .from('voter')
+          .select('*')
+          .eq('voter_id', idNumber)
+          .eq('password_hash', password)
+          .maybeSingle();
+
+        if (voterError) throw voterError;
+
+        if (voter) {
+          const user: AppUser = {
+            id: voter.voter_id,
+            displayName: `${voter.full_name} ${voter.surname}`,
+            roleName: 'Voter',
+            type: 'voter',
+            data: voter
+          };
+          setCurrentUser(user);
+          return;
+        }
+
+        setError('Invalid ID number or password.');
+        return;
+      }
+
+      const { data: sysUser, error: sysUserError } = await supabase
+        .from('admin_user')
+        .select('*, role:role_id(role_name)')
+        .eq('username', idNumber)
+        .eq('password_hash', password)
+        .maybeSingle();
+
+      if (sysUserError) throw sysUserError;
+
+      if (sysUser) {
+        const user: AppUser = {
+          id: sysUser.user_id.toString(),
+          displayName: sysUser.username,
+          roleName: sysUser.role?.role_name || 'Voter',
+          type: 'system_user',
+          data: sysUser
+        };
+        setCurrentUser(user);
+        return;
+      }
+
+      setError('Invalid admin username or password.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    // Try system user login (using idNumber as username for system users)
-    const sysUser = systemUsers.find(u => u.username === idNumber && u.password_hash === password);
-    if (sysUser) {
-      const role = roles.find(r => r.role_id === sysUser.role_id);
-      const user: AppUser = {
-        id: sysUser.user_id.toString(),
-        displayName: sysUser.username,
-        roleName: role?.role_name || 'Voter',
-        type: 'system_user',
-        data: sysUser
-      };
-      setCurrentUser(user);
-      return;
-    }
-
-    setError('Invalid ID number or password.');
   };
 
-  const demoLogin = (type: 'voter' | 'admin' | 'auditor') => {
-    if (type === 'voter') {
-      setIdNumber('9001015009087');
-      setPassword('pass123');
-    } else if (type === 'admin') {
-      setIdNumber('admin');
-      setPassword('admin123');
-    } else if (type === 'auditor') {
-      setIdNumber('auditor1');
-      setPassword('audit123');
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (!/^[0-9]{13}$/.test(idNumber)) {
+      setError('Please enter a valid 13-digit South African ID number.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { error: insertError } = await supabase
+        .from('voter')
+        .insert({
+          voter_id: idNumber,
+          full_name: fullName,
+          surname,
+          race,
+          password_hash: password,
+          voter_status: 'active',
+          qualification_status: true
+        });
+
+      if (insertError) throw insertError;
+
+      await refreshData();
+      setSuccess('Account created successfully. You can now sign in.');
+      setMode('login');
+      setFullName('');
+      setSurname('');
+      setRace('');
+      setPassword('');
+    } catch (err) {
+      if (err && typeof err === 'object' && 'message' in err) {
+        setError(String(err.message));
+      } else {
+        setError('Unable to create account. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,9 +161,9 @@ const Login: React.FC = () => {
       <section className="login-card">
         <div className="login-header">
           <img src={evcLogo} alt="E-Vote Commission logo" className="login-card-logo" />
-          <span className="eyebrow">Welcome back</span>
-          <h2>Sign in to your account</h2>
-          <p>Use your South African ID number or authorised staff username.</p>
+          <span className="eyebrow">{mode === 'login' ? 'Welcome back' : 'Create account'}</span>
+          <h2>{mode === 'login' ? loginType === 'voter' ? 'Voter Login' : 'Admin Login' : 'Register as a voter'}</h2>
+          <p>{mode === 'login' ? loginType === 'voter' ? 'Use your South African ID number to access voter services.' : 'Use your authorised staff username to manage elections and results.' : 'Create a voter account stored securely in Supabase.'}</p>
         </div>
         <div className="login-body">
           {error && (
@@ -105,9 +171,88 @@ const Login: React.FC = () => {
               {error}
             </div>
           )}
-          <form onSubmit={handleLogin}>
+          {success && (
+            <div className="alert alert-success login-error">
+              {success}
+            </div>
+          )}
+          {mode === 'login' && (
+            <div className="login-type-switch">
+              <button
+                type="button"
+                className={loginType === 'voter' ? 'active' : ''}
+                onClick={() => {
+                  setLoginType('voter');
+                  setError('');
+                  setSuccess('');
+                  setIdNumber('');
+                  setPassword('');
+                }}
+              >
+                Voter Login
+              </button>
+              <button
+                type="button"
+                className={loginType === 'admin' ? 'active' : ''}
+                onClick={() => {
+                  setLoginType('admin');
+                  setError('');
+                  setSuccess('');
+                  setIdNumber('');
+                  setPassword('');
+                }}
+              >
+                Admin Login
+              </button>
+            </div>
+          )}
+          <form onSubmit={mode === 'login' ? handleLogin : handleRegister}>
+            {mode === 'register' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">First Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your first name"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Surname</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    placeholder="Enter your surname"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="race">Race / Population Group</label>
+                  <select
+                    id="race"
+                    className="form-select"
+                    value={race}
+                    onChange={(e) => setRace(e.target.value)}
+                    required
+                  >
+                    <option value="">Select population group</option>
+                    <option value="Black African">Black African</option>
+                    <option value="Coloured">Coloured</option>
+                    <option value="Indian or Asian">Indian or Asian</option>
+                    <option value="White">White</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
+                </div>
+              </>
+            )}
             <div className="form-group">
-              <label className="form-label">South African ID Number</label>
+              <label className="form-label">{mode === 'login' && loginType === 'admin' ? 'Admin Username' : 'South African ID Number'}</label>
               <div className="input-with-icon">
                 <UserRound size={18} />
                 <input 
@@ -115,12 +260,12 @@ const Login: React.FC = () => {
                   className="form-input" 
                   value={idNumber}
                   onChange={(e) => setIdNumber(e.target.value)}
-                  placeholder="e.g. 9001015009087" 
-                  maxLength={13} 
+                  placeholder={mode === 'login' && loginType === 'admin' ? 'e.g. admin' : 'e.g. 9001015009087'} 
+                  maxLength={mode === 'login' && loginType === 'admin' ? undefined : 13} 
                   required 
                 />
               </div>
-              <div className="form-hint">Enter your 13-digit SA ID number or Username</div>
+              <div className="form-hint">{mode === 'login' && loginType === 'admin' ? 'Enter your authorised admin username' : 'Enter your 13-digit SA ID number'}</div>
             </div>
             <div className="form-group">
               <label className="form-label">Password</label>
@@ -136,23 +281,22 @@ const Login: React.FC = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-gold btn-lg btn-full">
-              Sign In <ArrowRight size={18} />
+            <button type="submit" className="btn btn-gold btn-lg btn-full" disabled={loading}>
+              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'} <ArrowRight size={18} />
             </button>
           </form>
-          <div className="login-divider"><span>Quick demo access</span></div>
-          <button className="btn btn-outline btn-full" onClick={() => demoLogin('voter')}>
-            Demo: Voter Login
+          <div className="login-divider"><span>{mode === 'login' ? 'New voter?' : 'Already registered?'}</span></div>
+          <button
+            className="btn btn-outline btn-full"
+            onClick={() => {
+              setError('');
+              setSuccess('');
+              setMode(mode === 'login' ? 'register' : 'login');
+              setLoginType('voter');
+            }}
+          >
+            {mode === 'login' ? 'Create voter account' : 'Back to sign in'}
           </button>
-          <button className="btn btn-outline-gold btn-full demo-button-spaced" onClick={() => demoLogin('admin')}>
-            Demo: Admin Login
-          </button>
-          <button className="btn btn-outline btn-full demo-button-spaced" onClick={() => demoLogin('auditor')}>
-            Demo: Auditor Login
-          </button>
-        </div>
-        <div className="login-footer">
-          Official Electoral System — Secured & Verified
         </div>
       </section>
     </div>

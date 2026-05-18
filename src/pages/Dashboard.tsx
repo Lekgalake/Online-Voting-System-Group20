@@ -13,10 +13,7 @@ const Dashboard: React.FC = () => {
   
   // Stats calculation
   const totalElections = elections.length;
-  const activeElectionsCount = elections.filter(e => {
-    const now = new Date();
-    return now >= new Date(e.start_date) && now <= new Date(e.end_date) && e.status === 'Active';
-  }).length;
+  const activeElectionsCount = elections.filter(e => e.status === 'Active').length;
 
   let stats = [];
 
@@ -38,9 +35,8 @@ const Dashboard: React.FC = () => {
   }
 
   const activeElection = elections.find(e => {
-    const now = new Date();
     const hasAlreadyVoted = participations.some(p => p.voter_id === currentUser.id && p.election_id === e.election_id);
-    return now >= new Date(e.start_date) && now <= new Date(e.end_date) && e.status === 'Active' && !hasAlreadyVoted;
+    return e.status === 'Active' && !hasAlreadyVoted;
   });
 
   return (
@@ -111,8 +107,8 @@ const Dashboard: React.FC = () => {
                       </span>
                     </td>
                     <td>
-                      <button className="btn btn-outline btn-sm" onClick={() => navigate('/elections')}>
-                        Details
+                      <button className={isVoter && el.status === 'Active' ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm'} onClick={() => navigate('/elections')}>
+                        {isVoter && el.status === 'Active' ? 'Vote' : 'Details'}
                       </button>
                     </td>
                   </tr>
