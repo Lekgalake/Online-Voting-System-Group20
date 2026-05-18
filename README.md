@@ -1,12 +1,12 @@
-# Online Voting System (EVC) - React Migration
+# Online Voting System (EVC)
 
-A professional, secure, and modular Online Voting System built with **React**, **TypeScript**, and **Vite**. This project was migrated from a monolithic prototype to a scalable architecture ready for enterprise-grade backend integration (Supabase).
+A professional, secure, and modular Online Voting System built with **React**, **TypeScript**, **Vite**, and **Supabase**.
 
-## 🇿🇦 Project Overview
+## Project Overview
 
-The E-Vote Commission (EVC) platform provides a secure environment for national, provincial, and local elections. It features a sophisticated 'Springbok' green and gold design system and supports multiple user roles, including Voters, Election Administrators, and Auditors.
+The E-Vote Commission (EVC) platform provides a secure environment for national, provincial, and local elections. It supports multiple user roles, including Voters, Election Administrators, System Administrators, and Auditors.
 
-## 🚀 Getting Started
+## Getting Started
 
 Follow these instructions to get the project up and running on your local machine.
 
@@ -15,18 +15,55 @@ Follow these instructions to get the project up and running on your local machin
 - **Node.js**: Version 18.0 or higher
 - **npm**: Version 9.0 or higher
 
-### Installation
+### Option 1: Download the ZIP Folder
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/[your-username]/Online-Voting-System-Group20.git
-   cd Online-Voting-System-Group20
+1. Go to the GitHub repository:
+
+   ```text
+   https://github.com/Lekgalake/Online-Voting-System-Group20
    ```
 
-2. **Install dependencies**
-   ```bash
-   npm install
+2. Click **Code** > **Download ZIP**.
+
+3. Extract the ZIP folder.
+
+4. Place the extracted folder on your Desktop.
+
+5. Open **PowerShell**.
+
+6. Navigate into the extracted project folder. For example:
+
+   ```powershell
+   cd "C:\Users\mulon\OneDrive\Desktop\Online-Voting-System-Group20-main"
    ```
+
+### Option 2: Clone the Repository
+
+If you prefer using Git, open PowerShell and run:
+
+```bash
+git clone https://github.com/Lekgalake/Online-Voting-System-Group20.git
+cd Online-Voting-System-Group20
+```
+
+### Environment Setup
+
+Create a `.env` file in the project root folder and add your Supabase credentials:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+You can find these values in **Supabase Dashboard** > **Project Settings** > **API**.
+
+### Install Dependencies
+
+Run this inside the project folder:
+
+```bash
+npm install
+```
 
 ### Running Locally
 
@@ -36,7 +73,17 @@ To start the development server with Hot Module Replacement (HMR):
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`.
+The application will be available at:
+
+```text
+http://localhost:5173
+```
+
+If PowerShell blocks npm scripts, run:
+
+```bash
+npm.cmd run dev
+```
 
 ### Building for Production
 
@@ -46,7 +93,7 @@ To create a production-ready bundle in the `dist` folder:
 npm run build
 ```
 
-## 🔐 Demo Credentials
+## Demo Credentials
 
 Use these accounts to test different features of the system:
 
@@ -56,19 +103,23 @@ Use these accounts to test different features of the system:
 | **System Admin** | `admin` | `admin123` |
 | **Auditor** | `auditor1` | `audit123` |
 
-## 🏗️ Architecture
+## Supabase Database
 
-- **`src/context/DataContext.tsx`**: Centralized state management using React Context. Currently handles mock database logic.
-- **`src/types/index.ts`**: Unified TypeScript interfaces for all data entities.
-- **`src/pages/`**: Modular page components (Dashboard, Elections, Voters, etc.).
-- **`src/components/`**: Reusable UI elements (Navbar, Modals, etc.).
-- **`src/index.css`**: Core design system using CSS variables for the EVC branding.
+The GitHub repository contains the SQL files needed for the database structure and fixes:
 
-## 🔜 Roadmap
+- `database.sql`
+- `supabase-fix-election-status-trigger.sql`
 
-- [ ] **Supabase Integration**: Replace the `DataProvider` mock state with real-time Supabase fetches and mutations.
-- [ ] **Biometric Verification**: Integration with official identity verification services.
-- [ ] **Blockchain Audit**: Immutable ledger for vote receipts.
+The actual Supabase database and data do not get downloaded with the ZIP file. To connect the app locally, use the correct Supabase URL and anon key in your local `.env` file.
+
+## Architecture
+
+- **`src/context/DataContext.tsx`**: Centralized state management and Supabase data operations.
+- **`src/types/index.ts`**: TypeScript interfaces for the main data entities.
+- **`src/pages/`**: Page components for Dashboard, Elections, Voters, Candidates, Audit Log, and Admin.
+- **`src/components/`**: Reusable UI components.
+- **`src/index.css`**: Main styling and EVC design system.
 
 ---
-© 2026 E-Vote Commission - Secure & Verified Electoral Systems
+
+Copyright 2026 E-Vote Commission - Secure & Verified Electoral Systems
