@@ -20,11 +20,17 @@ Follow these instructions to get the project up and running on your local machin
 Open **Windows PowerShell** and run:
 
 ```powershell
-cd "$env:USERPROFILE\OneDrive\Desktop"
+cd "$env:USERPROFILE\Desktop"
 git clone https://github.com/Lekgalake/Online-Voting-System-Group20.git
 cd Online-Voting-System-Group20
 npm install
 npm run dev
+```
+
+If your Desktop is synced with OneDrive, use this instead:
+
+```powershell
+cd "$env:USERPROFILE\OneDrive\Desktop"
 ```
 
 The application will be available at:
@@ -58,7 +64,13 @@ npm.cmd run dev
 6. Navigate into the extracted project folder. For example:
 
    ```powershell
-   cd "C:\Users\mulon\OneDrive\Desktop\Online-Voting-System-Group20-main"
+   cd "$env:USERPROFILE\Desktop\Online-Voting-System-Group20-main"
+   ```
+
+   If your Desktop is synced with OneDrive, the folder may be under:
+
+   ```powershell
+   cd "$env:USERPROFILE\OneDrive\Desktop\Online-Voting-System-Group20-main"
    ```
 
 7. Install dependencies and run the app:
