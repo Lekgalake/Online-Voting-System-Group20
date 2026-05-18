@@ -5,6 +5,15 @@ import type { AppUser } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import evcLogo from '../../Untitled design.png';
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (!err || typeof err !== 'object') return fallback;
+
+  const details = err as { message?: string; details?: string; hint?: string; code?: string };
+  return [details.message, details.details, details.hint, details.code ? `Code: ${details.code}` : '']
+    .filter(Boolean)
+    .join(' ') || fallback;
+};
+
 const Login: React.FC = () => {
   const { setCurrentUser, refreshData } = useData();
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -53,7 +62,7 @@ const Login: React.FC = () => {
 
       const { data: sysUser, error: sysUserError } = await supabase
         .from('admin_user')
-        .select('*, role:role_id(role_name)')
+        .select('*')
         .eq('username', idNumber)
         .eq('password_hash', password)
         .maybeSingle();
@@ -61,12 +70,20 @@ const Login: React.FC = () => {
       if (sysUserError) throw sysUserError;
 
       if (sysUser) {
+        const { data: role, error: roleError } = await supabase
+          .from('role')
+          .select('role_name')
+          .eq('role_id', sysUser.role_id)
+          .maybeSingle();
+
+        if (roleError) throw roleError;
+
         const user: AppUser = {
           id: sysUser.user_id.toString(),
           displayName: sysUser.username,
-          roleName: sysUser.role?.role_name || 'Voter',
+          roleName: role?.role_name || 'Voter',
           type: 'system_user',
-          data: sysUser
+          data: { ...sysUser, role }
         };
         setCurrentUser(user);
         return;
@@ -74,7 +91,7 @@ const Login: React.FC = () => {
 
       setError('Invalid admin username or password.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
+      setError(getErrorMessage(err, 'Unable to sign in. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -115,11 +132,7 @@ const Login: React.FC = () => {
       setRace('');
       setPassword('');
     } catch (err) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        setError(String(err.message));
-      } else {
-        setError('Unable to create account. Please try again.');
-      }
+      setError(getErrorMessage(err, 'Unable to create account. Please try again.'));
     } finally {
       setLoading(false);
     }
