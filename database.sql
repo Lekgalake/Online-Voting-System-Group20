@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS voter CASCADE;
 
 CREATE TABLE voter (
-    voter_id CHAR(13) PRIMARY KEY,
+    voter_id character(13) PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     surname VARCHAR(100) NOT NULL,
     race VARCHAR(50),
@@ -61,7 +61,7 @@ CREATE TABLE candidate (
 
 CREATE TABLE participation (
     participation_id SERIAL PRIMARY KEY,
-    voter_id CHAR(13) NOT NULL,
+    voter_id character(13) NOT NULL,
     election_id INTEGER NOT NULL,
     participation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -117,7 +117,7 @@ CREATE TABLE admin_user (
 CREATE TABLE audit_log (
     log_id SERIAL PRIMARY KEY,
     user_id INTEGER NULL,
-    voter_id CHAR(13) NULL,
+    voter_id character(13) NULL,
     action TEXT NOT NULL,
     log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
